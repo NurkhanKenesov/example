@@ -115,13 +115,13 @@ private val sampleStudents = listOf(
 
 private val filterChips = listOf("Все", "basic", "prepared", "special", "С травмами")
 
-data class NavItem(val label: String, val icon: ImageVector)
+data class TeacherNavItem(val label: String, val icon: ImageVector)
 
-private val navItems = listOf(
-    NavItem("Главная", Icons.Outlined.Home),
-    NavItem("Студенты", Icons.Outlined.School),
-    NavItem("Расписание", Icons.Outlined.CalendarMonth),
-    NavItem("Профиль", Icons.Outlined.Person)
+private val teacherNavItems = listOf(
+    TeacherNavItem("Главная", Icons.Outlined.Home),
+    TeacherNavItem("Студенты", Icons.Outlined.School),
+    TeacherNavItem("Расписание", Icons.Outlined.CalendarMonth),
+    TeacherNavItem("Профиль", Icons.Outlined.Person)
 )
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -410,7 +410,7 @@ private fun StudentsBottomNav(selectedIndex: Int, onSelect: (Int) -> Unit) {
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
         )
     ) {
-        navItems.forEachIndexed { index, item ->
+        teacherNavItems.forEachIndexed { index, item ->
             NavigationBarItem(
                 selected = index == selectedIndex,
                 onClick = { onSelect(index) },

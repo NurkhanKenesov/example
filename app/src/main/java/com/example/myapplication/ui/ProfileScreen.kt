@@ -424,11 +424,11 @@ private fun PhysicalTestRow(
 @Composable
 private fun BottomNavigationBar() {
     val navItems = listOf(
-        NavItem("🏠", "Главная"),
-        NavItem("📅", "Планы"),
-        NavItem("📚", "Обучение"),
-        NavItem("🏆", "Рейтинг"),
-        NavItem("👤", "Профиль")
+        ProfileNavItem("🏠", "Главная"),
+        ProfileNavItem("📅", "Планы"),
+        ProfileNavItem("📚", "Обучение"),
+        ProfileNavItem("🏆", "Рейтинг"),
+        ProfileNavItem("👤", "Профиль")
     )
     val selectedIndex = 4 // Profile is active
 
@@ -454,10 +454,10 @@ private fun BottomNavigationBar() {
     }
 }
 
-private data class NavItem(val icon: String, val label: String)
+private data class ProfileNavItem(val icon: String, val label: String)
 
 @Composable
-private fun NavBarItem(item: NavItem, isSelected: Boolean) {
+private fun NavBarItem(item: ProfileNavItem, isSelected: Boolean) {
     val labelColor = if (isSelected) ColorPrimary else ColorTextLight
 
     Column(

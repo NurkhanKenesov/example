@@ -60,9 +60,9 @@ data class ExerciseFeedbackState(
 
 
 private val defaultExercises = listOf(
-    Exercise("Push-ups", "🫸", 3, 12, Color(0x336C63FF)),
-    Exercise("Squats", "🤸", 3, 12, Color(0x33F87171)),
-    Exercise("Barbell Row", "💪", 3, 8, Color(0x33F5A623))
+    Exercise("🫸", "Push-ups", "", 3, 12, null, Color(0x336C63FF), 3, 12),
+    Exercise("🤸", "Squats", "", 3, 12, null, Color(0x33F87171), 3, 12),
+    Exercise("💪", "Barbell Row", "", 3, 8, null, Color(0x33F5A623), 3, 8)
 )
 
 @Composable

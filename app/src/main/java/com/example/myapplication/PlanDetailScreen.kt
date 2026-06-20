@@ -41,8 +41,6 @@ private val CardBorderColor = Color(0x12000000)
 
 data class DayTab(val shortName: String, val type: String)
 
-)
-
 // ── Static data ────────────────────────────────────────────────────────────────
 
 private val dayTabs = listOf(
@@ -55,8 +53,8 @@ private val warmupSection = ExerciseSection(
     emoji = "🔥",
     title = "РАЗМИНКА",
     exercises = listOf(
-        Exercise("🏃", "Jumping Jacks", "Full body warmup", 2, 20, 0.87, AmberIconBg),
-        Exercise("💫", "Arm Circles", "Shoulder warmup", 2, 15, 0.82, AmberIconBg),
+        Exercise("🏃", "Jumping Jacks", "Full body warmup", 2, 20, 0.87, AmberIconBg, 2, 20),
+        Exercise("💫", "Arm Circles", "Shoulder warmup", 2, 15, 0.82, AmberIconBg, 2, 15),
     ),
 )
 
@@ -64,9 +62,9 @@ private val mainSection = ExerciseSection(
     emoji = "💪",
     title = "ОСНОВНАЯ ЧАСТЬ",
     exercises = listOf(
-        Exercise("🦵", "Push-ups", "Chest and triceps • Сложность 2", 3, 12, 0.91, VioletIconBg),
-        Exercise("🤸", "Squats", "Quad and glute • Сложность 2", 3, 12, 0.88, VioletIconBg),
-        Exercise("🦾", "Barbell Row", "Upper back • Сложность 4", 3, 8, 0.85, VioletIconBg),
+        Exercise("🦵", "Push-ups", "Chest and triceps • Сложность 2", 3, 12, 0.91, VioletIconBg, 3, 12),
+        Exercise("🤸", "Squats", "Quad and glute • Сложность 2", 3, 12, 0.88, VioletIconBg, 3, 12),
+        Exercise("🦾", "Barbell Row", "Upper back • Сложность 4", 3, 8, 0.85, VioletIconBg, 3, 8),
     ),
 )
 
@@ -74,8 +72,8 @@ private val cooldownSection = ExerciseSection(
     emoji = "🧘",
     title = "ЗАМИНКА",
     exercises = listOf(
-        Exercise("🧘", "Hamstring Stretch", "Flexibility", 2, 1, null, GreenIconBg),
-        Exercise("🐄", "Cat-Cow Stretch", "Spine mobility", 2, 10, null, GreenIconBg),
+        Exercise("🧘", "Hamstring Stretch", "Flexibility", 2, 1, null, GreenIconBg, 2, 1),
+        Exercise("🐄", "Cat-Cow Stretch", "Spine mobility", 2, 10, null, GreenIconBg, 2, 10),
     ),
 )
 
