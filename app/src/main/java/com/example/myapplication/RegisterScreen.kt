@@ -40,8 +40,8 @@ enum class UserRole { Student, Teacher }
 
 @Composable
 fun RegisterScreen(
-    onBack: () -> Unit = {},
-    onRegister: (email: String, password: String, studentId: String, role: UserRole) -> Unit = { _, _, _, _ -> }
+    onBackClick: () -> Unit = {},
+    onRegisterSuccess: (email: String, password: String, studentId: String, role: UserRole) -> Unit = { _, _, _, _ -> }
 ) {
     var selectedRole by remember { mutableStateOf(UserRole.Student) }
     var email by remember { mutableStateOf("") }
@@ -75,7 +75,7 @@ fun RegisterScreen(
                     color = RegPurple,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Normal,
-                    modifier = Modifier.clickable { onBack() }
+                    modifier = Modifier.clickable { onBackClick() }
                 )
                 Box(
                     contentAlignment = Alignment.Center,
@@ -228,7 +228,7 @@ fun RegisterScreen(
                             )
                         )
                         .clickable {
-                            onRegister(email, password, studentId, selectedRole)
+                            onRegisterSuccess(email, password, studentId, selectedRole)
                         }
                 ) {
                     Text(

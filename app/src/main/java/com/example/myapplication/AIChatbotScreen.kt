@@ -57,7 +57,7 @@ private val sampleMessages = listOf(
 )
 
 @Composable
-fun AIChatbotScreen(onBack: () -> Unit = {}) {
+fun AIChatbotScreen(onBackClick: () -> Unit = {}) {
     var inputText by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf(*sampleMessages.toTypedArray()) }
     val listState = rememberLazyListState()
@@ -67,7 +67,7 @@ fun AIChatbotScreen(onBack: () -> Unit = {}) {
             .fillMaxSize()
             .background(ScreenGradient)
     ) {
-        ChatNavBar(onBack = onBack)
+        ChatNavBar(onBack = onBackClick)
 
         LazyColumn(
             state = listState,
@@ -99,7 +99,7 @@ fun AIChatbotScreen(onBack: () -> Unit = {}) {
 }
 
 @Composable
-private fun ChatNavBar(onBack: () -> Unit) {
+private fun ChatNavBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,7 +107,7 @@ private fun ChatNavBar(onBack: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         TextButton(
-            onClick = onBack,
+            onClick = onBackClick,
             contentPadding = PaddingValues(0.dp)
         ) {
             Text(

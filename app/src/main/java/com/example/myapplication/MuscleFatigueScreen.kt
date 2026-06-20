@@ -56,14 +56,14 @@ private val fullyRecoveredMuscles = listOf(
 )
 
 @Composable
-fun MuscleFatigueScreen(onNavigateBack: () -> Unit = {}) {
+fun MuscleFatigueScreen(onBackClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Color(0xFFF0F2FF), Color(0xFFF5F7FF))))
             .verticalScroll(rememberScrollState())
     ) {
-        NavBar(onNavigateBack)
+        NavBar(onBackClick)
         ScreenHeader()
         Spacer(modifier = Modifier.height(8.dp))
         SummaryCard(modifier = Modifier.padding(horizontal = 20.dp))
@@ -76,7 +76,7 @@ fun MuscleFatigueScreen(onNavigateBack: () -> Unit = {}) {
 }
 
 @Composable
-private fun NavBar(onNavigateBack: () -> Unit) {
+private fun NavBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -84,7 +84,7 @@ private fun NavBar(onNavigateBack: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         androidx.compose.material3.TextButton(
-            onClick = onNavigateBack,
+            onClick = onBackClick,
             contentPadding = PaddingValues(0.dp)
         ) {
             Text(

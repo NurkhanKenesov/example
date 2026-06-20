@@ -127,7 +127,9 @@ private val teacherNavItems = listOf(
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 @Composable
-fun StudentsScreen() {
+fun StudentsScreen(
+    onBackClick: () -> Unit = {}
+) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Все") }
     var selectedNavIndex by remember { mutableIntStateOf(1) }

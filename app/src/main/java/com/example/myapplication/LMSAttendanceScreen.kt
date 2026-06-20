@@ -34,7 +34,7 @@ private val ColorSubtext = Color(0x80_0F0F23)
 private val GradientQrButton = Brush.horizontalGradient(listOf(ColorGreen, ColorCyan))
 
 @Composable
-fun LMSAttendanceScreen(onBack: () -> Unit = {}) {
+fun LMSAttendanceScreen(onBackClick: () -> Unit = {}) {
     Scaffold(
         containerColor = ColorBackground,
         bottomBar = { AttendanceBottomNav() }
@@ -54,7 +54,7 @@ fun LMSAttendanceScreen(onBack: () -> Unit = {}) {
                     .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AttendanceTopBar(onBack = onBack)
+                AttendanceTopBar(onBack = onBackClick)
                 Spacer(modifier = Modifier.height(8.dp))
                 QrCheckInButton()
                 Spacer(modifier = Modifier.height(24.dp))

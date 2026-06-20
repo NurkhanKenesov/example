@@ -82,7 +82,11 @@ private val allSections = listOf(warmupSection, mainSection, cooldownSection)
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
 @Composable
-fun PlanDetailScreen(onBack: () -> Unit = {}) {
+fun PlanDetailScreen(
+    onBackClick: () -> Unit = {},
+    onFeedbackClick: () -> Unit = {},
+    onAIClick: () -> Unit = {}
+) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     Box(
@@ -96,7 +100,7 @@ fun PlanDetailScreen(onBack: () -> Unit = {}) {
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 96.dp),
         ) {
-            TopNavBar(onBack = onBack)
+            TopNavBar(onBack = onBackClick)
             DayTabsRow(selectedTabIndex = selectedTabIndex, onTabSelected = { selectedTabIndex = it })
             Spacer(Modifier.height(8.dp))
             allSections.forEach { section ->
@@ -114,7 +118,7 @@ fun PlanDetailScreen(onBack: () -> Unit = {}) {
 // ── Top navigation bar ─────────────────────────────────────────────────────────
 
 @Composable
-private fun TopNavBar(onBack: () -> Unit) {
+private fun TopNavBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -127,7 +131,7 @@ private fun TopNavBar(onBack: () -> Unit) {
             color = PrimaryBlue,
             fontSize = 17.sp,
             fontWeight = FontWeight.W400,
-            modifier = Modifier.clickable { onBack() },
+            modifier = Modifier.clickable { onBackClick() },
         )
         Text(
             text = "План #1248",

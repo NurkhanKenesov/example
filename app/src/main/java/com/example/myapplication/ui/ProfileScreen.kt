@@ -36,7 +36,11 @@ private val ColorBackgroundEnd = Color(0xFFF5F7FF)
 private val ColorDivider = Color(0x110F0F23)
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onBackClick: () -> Unit = {},
+    onNavigateToMuscleFatigue: () -> Unit = {},
+    onNavigateToStats: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
 
     Box(

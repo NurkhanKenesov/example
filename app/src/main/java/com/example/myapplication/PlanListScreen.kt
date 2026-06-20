@@ -98,7 +98,10 @@ private val samplePlans = listOf(
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
 @Composable
-fun PlanListScreen() {
+fun PlanListScreen(
+    onPlanClick: () -> Unit = {},
+    onBackClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()

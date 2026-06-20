@@ -38,8 +38,8 @@ private val InfoCardBackground = Color(0xFFFFFFFF)
 
 @Composable
 fun LoginScreen(
-    onBack: () -> Unit = {},
-    onLogin: (email: String, password: String) -> Unit = { _, _ -> },
+    onBackClick: () -> Unit = {},
+    onLoginSuccess: (email: String, password: String) -> Unit = { _, _ -> },
     onForgotPassword: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
@@ -68,7 +68,7 @@ fun LoginScreen(
                 fontWeight = FontWeight.Normal,
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 12.dp)
-                    .clickable { onBack() }
+                    .clickable { onBackClick() }
             )
 
             Column(
@@ -171,7 +171,7 @@ fun LoginScreen(
 
                 // Login button
                 Button(
-                    onClick = { onLogin(email, password) },
+                    onClick = { onLoginSuccess(email, password) },
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Purple),
                     modifier = Modifier

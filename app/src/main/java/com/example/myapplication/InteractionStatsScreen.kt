@@ -69,7 +69,7 @@ private val exercises = listOf(
 )
 
 @Composable
-fun InteractionStatsScreen(onBack: () -> Unit = {}) {
+fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -99,7 +99,7 @@ fun InteractionStatsScreen(onBack: () -> Unit = {}) {
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = onBack
+                        onClick = onBackClick
                     )
                 )
             }

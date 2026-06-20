@@ -50,7 +50,7 @@ private val achievements = listOf(
 )
 
 @Composable
-fun AchievementsScreen(onBack: () -> Unit = {}) {
+fun AchievementsScreen(onBackClick: () -> Unit = {}) {
     var selectedTab by remember { mutableStateOf(0) }
 
     Box(
@@ -60,7 +60,7 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Nav bar
-            AchievNavBar(onBack = onBack)
+            AchievNavBar(onBack = onBackClick)
 
             // Tab switcher
             AchievTabSwitcher(
@@ -89,7 +89,7 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
 }
 
 @Composable
-private fun AchievNavBar(onBack: () -> Unit) {
+private fun AchievNavBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -102,7 +102,7 @@ private fun AchievNavBar(onBack: () -> Unit) {
             color = AchievPrimary,
             fontSize = 17.sp,
             fontWeight = FontWeight.Normal,
-            modifier = Modifier.clickable { onBack() }
+            modifier = Modifier.clickable { onBackClick() }
         )
         Text(
             text = "Достижения",

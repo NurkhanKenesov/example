@@ -44,7 +44,7 @@ private val ScannerFrameSize = 260.dp
 private val ScannerCornerRadius = 20.dp
 
 @Composable
-fun QRScannerScreen(onBack: () -> Unit = {}) {
+fun QRScannerScreen(onBackClick: () -> Unit = {}) {
     val scanLineTransition = rememberInfiniteTransition(label = "scanLine")
     val scanLineProgress by scanLineTransition.animateFloat(
         initialValue = 0f,
@@ -71,7 +71,7 @@ fun QRScannerScreen(onBack: () -> Unit = {}) {
         ) {
             Row(
                 modifier = Modifier
-                    .clickable(onClick = onBack)
+                    .clickable(onClick = onBackClick)
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

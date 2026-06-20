@@ -58,7 +58,11 @@ private val GradientAvatar = Brush.linearGradient(
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToPlans: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToChatbot: () -> Unit = {}
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
