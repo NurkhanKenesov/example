@@ -15,6 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavDestination.Companion.hasRoute
 import com.example.myapplication.*
 import com.example.myapplication.ui.ProfileScreen
+import com.example.myapplication.navItems
 
 @Composable
 fun AppNavHost(
@@ -38,14 +39,15 @@ fun AppNavHost(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 8.dp
                 ) {
-                    val items = listOf(
-                        Triple("Главная", "🏠", HomeRoute),
-                        Triple("Планы", "📅", PlansRoute),
-                        Triple("Обучение", "📚", LMSAttendanceRoute),
-                        Triple("Рейтинг", "🏆", AchievementsRoute),
-                        Triple("Профиль", "👤", ProfileRoute)
+                    val routeMap = mapOf(
+                        "Главная" to HomeRoute,
+                        "Планы" to PlansRoute,
+                        "Обучение" to LMSAttendanceRoute,
+                        "Рейтинг" to AchievementsRoute,
+                        "Профиль" to ProfileRoute
                     )
-                    items.forEach { (label, icon, route) ->
+                    navItems.forEach { item ->
+                        val route = routeMap[item.label] ?: HomeRoute
                         val isSelected = currentDestination?.hasRoute(route::class) == true
                         NavigationBarItem(
                             selected = isSelected,
@@ -58,13 +60,13 @@ fun AppNavHost(
                             },
                             icon = {
                                 Text(
-                                    text = icon,
+                                    text = item.icon,
                                     fontSize = 20.sp
                                 )
                             },
                             label = {
                                 Text(
-                                    text = label,
+                                    text = item.label,
                                     fontSize = 10.sp
                                 )
                             }
