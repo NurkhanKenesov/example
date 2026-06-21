@@ -51,7 +51,7 @@ private val achievements = listOf(
 
 @Composable
 fun AchievementsScreen(onBackClick: () -> Unit = {}) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Box(
         modifier = Modifier
@@ -60,7 +60,7 @@ fun AchievementsScreen(onBackClick: () -> Unit = {}) {
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Nav bar
-            AchievNavBar(onBack = onBackClick)
+            AchievNavBar(onBackClick = onBackClick)
 
             // Tab switcher
             AchievTabSwitcher(
@@ -75,16 +75,11 @@ fun AchievementsScreen(onBackClick: () -> Unit = {}) {
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp)
-                    .padding(top = 20.dp, bottom = 100.dp)
+                    .padding(top = 20.dp, bottom = 16.dp)
             ) {
                 AchievementsGrid(achievements = achievements)
             }
         }
-
-        // Bottom navigation bar
-        AchievBottomNavBar(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
@@ -219,59 +214,7 @@ private fun AchievementCard(achievement: Achievement, modifier: Modifier = Modif
     }
 }
 
-@Composable
-private fun AchievBottomNavBar(modifier: Modifier = Modifier) {
-    val tabs = listOf(
-        NavItem("🏠", "Главная"),
-        NavItem("📅", "Планы"),
-        NavItem("📚", "Обучение"),
-        NavItem("🏆", "Рейтинг", isActive = true),
-        NavItem("👤", "Профиль")
-    )
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(84.dp)
-            .background(Color.White)
-            .border(
-                width = 1.dp,
-                color = AchievNavBorder,
-                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)
-            )
-            .padding(top = 10.dp, start = 18.dp, end = 18.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        tabs.forEach { tab ->
-            AchievBottomNavItem(item = tab)
-        }
-    }
-}
-
-@Composable
-private fun AchievBottomNavItem(item: NavItem) {
-    val contentColor = if (item.isActive) AchievPrimary else AchievTextFaint
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = item.icon,
-            fontSize = 22.sp,
-            color = contentColor,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = item.label,
-            color = contentColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 @Preview(showBackground = true, widthDp = 393, heightDp = 852)
 @Composable

@@ -72,8 +72,6 @@ fun ProfileScreen(
                 PhysicalTestsCard()
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-            BottomNavigationBar()
         }
     }
 }
@@ -425,62 +423,12 @@ private fun PhysicalTestRow(
     }
 }
 
-@Composable
-private fun BottomNavigationBar() {
-    val navItems = listOf(
-        ProfileNavItem("🏠", "Главная"),
-        ProfileNavItem("📅", "Планы"),
-        ProfileNavItem("📚", "Обучение"),
-        ProfileNavItem("🏆", "Рейтинг"),
-        ProfileNavItem("👤", "Профиль")
-    )
-    val selectedIndex = 4 // Profile is active
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = ColorSurface,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            navItems.forEachIndexed { index, item ->
-                NavBarItem(
-                    item = item,
-                    isSelected = index == selectedIndex
-                )
-            }
-        }
-    }
-}
-
-private data class ProfileNavItem(val icon: String, val label: String)
-
-@Composable
-private fun NavBarItem(item: ProfileNavItem, isSelected: Boolean) {
-    val labelColor = if (isSelected) ColorPrimary else ColorTextLight
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 4.dp)
-    ) {
-        Text(text = item.icon, fontSize = 20.sp)
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = item.label,
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = labelColor
-        )
-    }
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileScreen(
+        onBackClick = {},
+        onNavigateToMuscleFatigue = {},
+        onNavigateToStats = {}
+    )
 }

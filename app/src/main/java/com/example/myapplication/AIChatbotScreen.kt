@@ -67,7 +67,7 @@ fun AIChatbotScreen(onBackClick: () -> Unit = {}) {
             .fillMaxSize()
             .background(ScreenGradient)
     ) {
-        ChatNavBar(onBack = onBackClick)
+        ChatNavBar(onBackClick = onBackClick)
 
         LazyColumn(
             state = listState,

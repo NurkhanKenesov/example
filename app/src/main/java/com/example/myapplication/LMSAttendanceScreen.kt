@@ -1,12 +1,11 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,29 +33,27 @@ private val ColorSubtext = Color(0x80_0F0F23)
 private val GradientQrButton = Brush.horizontalGradient(listOf(ColorGreen, ColorCyan))
 
 @Composable
-fun LMSAttendanceScreen(onBackClick: () -> Unit = {}) {
-    Scaffold(
-        containerColor = ColorBackground,
-        bottomBar = { AttendanceBottomNav() }
-    ) { innerPadding ->
-        Box(
+fun LMSAttendanceScreen(
+    onBackClick: () -> Unit = {},
+    onNavigateToQRScanner: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(listOf(ColorSurface, ColorBackground))
+            )
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(listOf(ColorSurface, ColorBackground))
-                )
-                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AttendanceTopBar(onBack = onBackClick)
+            AttendanceTopBar(onBack = onBackClick)
                 Spacer(modifier = Modifier.height(8.dp))
-                QrCheckInButton()
+                QrCheckInButton(onClick = onNavigateToQRScanner)
                 Spacer(modifier = Modifier.height(24.dp))
                 AttendanceJournalSection()
                 Spacer(modifier = Modifier.height(20.dp))
@@ -64,7 +61,6 @@ fun LMSAttendanceScreen(onBackClick: () -> Unit = {}) {
                 Spacer(modifier = Modifier.height(20.dp))
                 TheoryTestsSection()
             }
-        }
     }
 }
 
@@ -98,12 +94,13 @@ private fun AttendanceTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun QrCheckInButton() {
+private fun QrCheckInButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .width(353.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(GradientQrButton)
+            .clickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -314,44 +311,7 @@ private fun TheoryTestsSection() {
     }
 }
 
-@Composable
-private fun AttendanceBottomNav() {
-    NavigationBar(
-        containerColor = ColorCardBg,
-        tonalElevation = 0.dp
-    ) {
-        val items = listOf(
-            Triple("Главная", Icons.Default.Home, false),
-            Triple("Планы", Icons.Default.DateRange, false),
-            Triple("Обучение", Icons.Default.MenuBook, true),
-            Triple("Рейтинг", Icons.Default.EmojiEvents, false),
-            Triple("Профиль", Icons.Default.Person, false),
-        )
-        items.forEach { (label, icon, selected) ->
-            NavigationBarItem(
-                selected = selected,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        tint = if (selected) ColorPrimary else ColorDark.copy(alpha = 0.4f)
-                    )
-                },
-                label = {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        color = if (selected) ColorPrimary else ColorDark.copy(alpha = 0.4f)
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent
-                )
-            )
-        }
-    }
-}
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

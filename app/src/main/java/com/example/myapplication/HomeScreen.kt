@@ -3,6 +3,7 @@ package com.example.myapplication
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -31,7 +32,6 @@ private val ColorDark = Color(0xFF0F0F23)
 private val ColorTextMuted = Color(0xFF0F0F23).copy(alpha = 0.50f)
 private val ColorTextFaint = Color(0xFF0F0F23).copy(alpha = 0.40f)
 private val ColorSurface = Color(0xFFF8F9FF)
-private val ColorBackground = Color(0xFFF5F7FF)
 private val ColorCardBorder = Color(0xFF000000).copy(alpha = 0.06f)
 private val ColorPrimaryBorder = Color(0xFF6C63FF).copy(alpha = 0.20f)
 private val ColorRed = Color(0xFFF87171)
@@ -39,7 +39,6 @@ private val ColorRedBg = Color(0xFFF87171).copy(alpha = 0.07f)
 private val ColorRedBorder = Color(0xFFF87171).copy(alpha = 0.20f)
 private val ColorGreen = Color(0xFF4ADE80)
 private val ColorGreenBg = Color(0xFF4ADE80).copy(alpha = 0.10f)
-private val ColorCyan = Color(0xFF22D3EE)
 
 private val GradientPrimary = Brush.linearGradient(
     colors = listOf(ColorPrimary, ColorSecondary)
@@ -63,18 +62,11 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToChatbot: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    Scaffold(
-        containerColor = Color.Transparent,
-        bottomBar = { BottomNavBar(selectedTab) { selectedTab = it } }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(GradientBackground)
-                .padding(innerPadding)
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GradientBackground)
+    ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -83,7 +75,7 @@ fun HomeScreen(
                     .padding(top = 12.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                WelcomeHeader()
+                WelcomeHeader(onNavigateToProfile = onNavigateToProfile)
                 Spacer(modifier = Modifier.height(20.dp))
                 CreditStatusCard()
                 Spacer(modifier = Modifier.height(16.dp))
@@ -97,14 +89,16 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 SectionLabel("Быстрые действия")
                 Spacer(modifier = Modifier.height(12.dp))
-                QuickActionButtons()
+                QuickActionButtons(
+                    onNavigateToPlans = onNavigateToPlans,
+                    onNavigateToChatbot = onNavigateToChatbot
+                )
             }
         }
-    }
 }
 
 @Composable
-private fun WelcomeHeader() {
+private fun WelcomeHeader(onNavigateToProfile: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -124,14 +118,17 @@ private fun WelcomeHeader() {
                 color = ColorDark
             )
         }
-        AvatarBadge(initials = "AS")
+        AvatarBadge(
+            initials = "AS",
+            modifier = Modifier.clickable { onNavigateToProfile() }
+        )
     }
 }
 
 @Composable
-private fun AvatarBadge(initials: String) {
+private fun AvatarBadge(initials: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
             .background(GradientAvatar),
@@ -415,7 +412,10 @@ private fun InjuryWarningCard() {
 }
 
 @Composable
-private fun QuickActionButtons() {
+private fun QuickActionButtons(
+    onNavigateToPlans: () -> Unit,
+    onNavigateToChatbot: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -426,6 +426,7 @@ private fun QuickActionButtons() {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
                 .background(GradientPrimary)
+                .clickable { onNavigateToPlans() }
                 .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -444,6 +445,7 @@ private fun QuickActionButtons() {
                 .clip(RoundedCornerShape(14.dp))
                 .background(ColorSurface)
                 .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
+                .clickable { onNavigateToChatbot() }
                 .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -459,50 +461,4 @@ private fun QuickActionButtons() {
 }
 
 
-@Composable
-private fun BottomNavBar(selectedIndex: Int, onTabSelected: (Int) -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .border(
-                width = 1.dp,
-                color = Color.Black.copy(alpha = 0.07f),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-            )
-    ) {
-        NavigationBar(
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp
-        ) {
-            navItems.forEachIndexed { index, item ->
-                val isSelected = index == selectedIndex
-                NavigationBarItem(
-                    selected = isSelected,
-                    onClick = { onTabSelected(index) },
-                    icon = {
-                        Text(
-                            text = item.icon,
-                            fontSize = 20.sp
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = item.label,
-                            fontSize = 10.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) ColorPrimary else ColorTextFaint
-                        )
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ColorPrimary,
-                        unselectedIconColor = ColorTextFaint,
-                        selectedTextColor = ColorPrimary,
-                        unselectedTextColor = ColorTextFaint,
-                        indicatorColor = ColorPrimary.copy(alpha = 0.10f)
-                    )
-                )
-            }
-        }
-    }
-}
+

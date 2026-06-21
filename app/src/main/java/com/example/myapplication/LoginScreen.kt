@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -24,9 +25,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val Purple = Color(0xFF6C63FF)
-private val PurpleLight = Color(0x336C63FF)
 private val DarkBlue = Color(0xFF0F0F23)
 private val DarkBlueSubtle = Color(0x660F0F23)
 private val Amber = Color(0xFFFBBF24)
@@ -45,6 +47,13 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var generalError by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val isEmailValid = email.contains("@")
+    val isPasswordValid = password.length >= 6
+    val isFormValid = isEmailValid && isPasswordValid && !isLoading
 
     Box(
         modifier = Modifier
@@ -99,7 +108,10 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        generalError = null
+                    },
                     placeholder = {
                         Text(
                             text = "student1@smartpe.edu",
@@ -122,15 +134,29 @@ fun LoginScreen(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = if (email.isNotEmpty() && !isEmailValid) 4.dp else 16.dp)
+                        .testTag("email_field")
                 )
+                if (email.isNotEmpty() && !isEmailValid) {
+                    Text(
+                        text = "Неверный формат email",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .testTag("email_error_text")
+                    )
+                }
 
                 // Password field
                 FieldLabel(text = "ПАРОЛЬ")
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        generalError = null
+                    },
                     placeholder = {
                         Text(
                             text = "••••••••",
@@ -166,24 +192,77 @@ fun LoginScreen(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp)
+                        .padding(bottom = if (password.isNotEmpty() && !isPasswordValid) 4.dp else 24.dp)
+                        .testTag("password_field")
                 )
+                if (password.isNotEmpty() && !isPasswordValid) {
+                    Text(
+                        text = "Пароль должен быть не менее 6 символов",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .testTag("password_error_text")
+                    )
+                }
+
+                // General Error Message
+                if (generalError != null) {
+                    Text(
+                        text = generalError!!,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .testTag("general_error_text")
+                    )
+                }
 
                 // Login button
                 Button(
-                    onClick = { onLoginSuccess(email, password) },
+                    onClick = {
+                        if (isFormValid) {
+                            isLoading = true
+                            generalError = null
+                            coroutineScope.launch {
+                                delay(800)
+                                isLoading = false
+                                if (email == "test@test.com" && password == "123456") {
+                                    onLoginSuccess(email, password)
+                                } else {
+                                    generalError = "Неверный email или пароль"
+                                }
+                            }
+                        }
+                    },
+                    enabled = isFormValid,
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Purple,
+                        disabledContainerColor = Purple.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
+                        .testTag("login_button")
                 ) {
-                    Text(
-                        text = "Войти",
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .testTag("loading_indicator"),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Войти",
+                            color = Color.White,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 // Forgot password

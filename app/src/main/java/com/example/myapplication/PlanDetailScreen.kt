@@ -100,7 +100,7 @@ fun PlanDetailScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 96.dp),
         ) {
-            TopNavBar(onBack = onBackClick)
+            TopNavBar(onBackClick = onBackClick)
             DayTabsRow(selectedTabIndex = selectedTabIndex, onTabSelected = { selectedTabIndex = it })
             Spacer(Modifier.height(8.dp))
             allSections.forEach { section ->
@@ -341,7 +341,7 @@ private fun PlanDetailBottomNavBar(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            navItems.map { item ->
+            navItems.forEach { item ->
                 val isActive = item.label == "Планы"
                 NavBottomItem(icon = item.icon, label = item.label, isActive = isActive)
             }

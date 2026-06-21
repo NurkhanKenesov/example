@@ -111,7 +111,7 @@ fun PlanListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 112.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             // Title
@@ -140,9 +140,6 @@ fun PlanListScreen(
                 Spacer(Modifier.height(4.dp))
             }
         }
-
-        // Bottom navigation
-        BottomNavBar(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -350,49 +347,7 @@ private fun DayLabel(label: String, isActive: Boolean, barColor: Color) {
     }
 }
 
-// ── Bottom navigation bar ──────────────────────────────────────────────────────
 
-
-@Composable
-private fun BottomNavBar(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(Color.White)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            navItems.forEach { item ->
-                BottomNavItem(item = item)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BottomNavItem(item: NavItem) {
-    val labelColor = if (item.isActive) GradientStart else EbonyAlpha40
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-    ) {
-        Text(text = item.icon, fontSize = 22.sp)
-        Text(
-            text = item.label,
-            color = labelColor,
-            fontSize = 10.sp,
-            fontWeight = if (item.isActive) FontWeight.W600 else FontWeight.W400,
-        )
-    }
-}
 
 // ── Preview ────────────────────────────────────────────────────────────────────
 
