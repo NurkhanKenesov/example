@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,9 +99,9 @@ fun PlanDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 96.dp),
+                .padding(bottom = 16.dp),
         ) {
-            TopNavBar(onBackClick = onBackClick)
+            TopNavBar(onBackClick = onBackClick, onAIClick = onAIClick)
             DayTabsRow(selectedTabIndex = selectedTabIndex, onTabSelected = { selectedTabIndex = it })
             Spacer(Modifier.height(8.dp))
             allSections.forEach { section ->
@@ -111,14 +112,24 @@ fun PlanDetailScreen(
             }
         }
 
-        PlanDetailBottomNavBar(modifier = Modifier.align(Alignment.BottomCenter))
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TextButton(onClick = onFeedbackClick) {
+                Text("Обратная связь", color = PrimaryBlue)
+            }
+        }
     }
 }
 
 // ── Top navigation bar ─────────────────────────────────────────────────────────
 
 @Composable
-private fun TopNavBar(onBackClick: () -> Unit) {
+private fun TopNavBar(onBackClick: () -> Unit, onAIClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,6 +155,7 @@ private fun TopNavBar(onBackClick: () -> Unit) {
             color = PrimaryBlue,
             fontSize = 15.sp,
             fontWeight = FontWeight.W700,
+            modifier = Modifier.clickable { onAIClick() }
         )
     }
 }
@@ -321,50 +333,6 @@ private fun ExerciseIcon(emoji: String, bg: Color) {
         contentAlignment = Alignment.Center,
     ) {
         Text(text = emoji, fontSize = 20.sp, textAlign = TextAlign.Center)
-    }
-}
-
-// ── Bottom navigation bar ──────────────────────────────────────────────────────
-
-@Composable
-private fun PlanDetailBottomNavBar(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(Color.White)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            navItems.forEach { item ->
-                val isActive = item.label == "Планы"
-                NavBottomItem(icon = item.icon, label = item.label, isActive = isActive)
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavBottomItem(icon: String, label: String, isActive: Boolean) {
-    val labelColor = if (isActive) PrimaryBlue else EbonyAlpha40
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-    ) {
-        Text(text = icon, fontSize = 22.sp)
-        Text(
-            text = label,
-            color = labelColor,
-            fontSize = 10.sp,
-            fontWeight = if (isActive) FontWeight.W600 else FontWeight.W400,
-        )
     }
 }
 

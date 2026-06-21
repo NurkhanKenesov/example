@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,18 +115,31 @@ fun PlanListScreen(
                 .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Title
-            Text(
-                text = "📅 Мои планы",
-                color = Ebony,
-                fontSize = 34.sp,
-                fontWeight = FontWeight.W800,
-                lineHeight = 39.1.sp,
+            // Title with back button
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 3.5.dp)
-                    .paddingFromBaseline(bottom = 15.59.dp),
-            )
+                    .padding(horizontal = 20.dp, vertical = 3.5.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "‹",
+                    color = GradientStart,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.W800,
+                    modifier = Modifier.clickable { onBackClick() }
+                )
+                Text(
+                    text = "📅 Мои планы",
+                    color = Ebony,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.W800,
+                    lineHeight = 39.1.sp,
+                    modifier = Modifier.paddingFromBaseline(bottom = 15.59.dp),
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -136,7 +150,7 @@ fun PlanListScreen(
 
             // Plan cards
             samplePlans.forEach { plan ->
-                PlanCard(plan = plan)
+                PlanCard(plan = plan, onPlanClick = onPlanClick)
                 Spacer(Modifier.height(4.dp))
             }
         }
@@ -173,13 +187,14 @@ private fun GenerateButton() {
 // ── Plan card ──────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PlanCard(plan: TrainingPlan) {
+private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), spotColor = Color(0x0F000000))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
+            .clickable { onPlanClick() }
             .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {

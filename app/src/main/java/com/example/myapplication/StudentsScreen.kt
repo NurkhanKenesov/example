@@ -2,6 +2,7 @@ package com.example.myapplication
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -136,6 +137,24 @@ fun StudentsScreen(
 
     Scaffold(
         containerColor = ColorSurface,
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "‹",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ColorPurple,
+                    modifier = Modifier.clickable { onBackClick() }
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        },
         bottomBar = { StudentsBottomNav(selectedNavIndex) { selectedNavIndex = it } }
     ) { innerPadding ->
         Column(
@@ -294,6 +313,7 @@ private fun FilterChipItem(label: String, isSelected: Boolean, onClick: () -> Un
             .clip(RoundedCornerShape(20.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+            .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = textColor)

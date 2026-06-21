@@ -26,6 +26,7 @@ fun AppNavHost(
 
     val showBottomBar = currentDestination?.hasRoute(HomeRoute::class) == true ||
             currentDestination?.hasRoute(PlansRoute::class) == true ||
+            currentDestination?.hasRoute(PlanDetailRoute::class) == true ||
             currentDestination?.hasRoute(LMSAttendanceRoute::class) == true ||
             currentDestination?.hasRoute(AchievementsRoute::class) == true ||
             currentDestination?.hasRoute(ProfileRoute::class) == true

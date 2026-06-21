@@ -1,6 +1,7 @@
 package com.example.myapplication.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -59,17 +60,17 @@ fun ProfileScreen(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                TopNavBar()
+                TopNavBar(onBackClick = onBackClick)
                 AvatarSection()
                 Spacer(modifier = Modifier.height(8.dp))
                 SectionLabel(text = "БИОМЕТРИЯ")
                 BiometricsCard()
                 Spacer(modifier = Modifier.height(16.dp))
                 SectionLabel(text = "МЕДИЦИНСКАЯ КАРТА")
-                MedicalCard()
+                MedicalCard(onNavigateToMuscleFatigue = onNavigateToMuscleFatigue)
                 Spacer(modifier = Modifier.height(16.dp))
                 SectionLabel(text = "ФИЗИЧЕСКИЕ ТЕСТЫ")
-                PhysicalTestsCard()
+                PhysicalTestsCard(onNavigateToStats = onNavigateToStats)
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -77,7 +78,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun TopNavBar() {
+private fun TopNavBar(onBackClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,7 +86,13 @@ private fun TopNavBar() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(modifier = Modifier.width(24.dp))
+        Text(
+            text = "‹",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Normal,
+            color = ColorPrimary,
+            modifier = Modifier.clickable { onBackClick() }
+        )
         Text(
             text = "Мой профиль",
             fontSize = 17.sp,
@@ -276,11 +283,12 @@ private fun BiometricDivider() {
 }
 
 @Composable
-private fun MedicalCard() {
+private fun MedicalCard(onNavigateToMuscleFatigue: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .clickable { onNavigateToMuscleFatigue() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ColorSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -344,11 +352,12 @@ private fun MedicalCard() {
 }
 
 @Composable
-private fun PhysicalTestsCard() {
+private fun PhysicalTestsCard(onNavigateToStats: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .clickable { onNavigateToStats() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ColorSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
