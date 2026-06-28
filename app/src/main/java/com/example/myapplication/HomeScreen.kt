@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 // Design tokens
 private val ColorPrimary = Color(0xFF6C63FF)
@@ -65,56 +67,90 @@ fun HomeScreen(
     onNavigateToStudents: () -> Unit = {},
     onNavigateToLMSAttendance: () -> Unit = {},
     onNavigateToQRScanner: () -> Unit = {},
-    onNavigateToAchievements: () -> Unit = {}
+    onNavigateToAchievements: () -> Unit = {},
+    viewModel: UserProfileViewModel = viewModel()
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GradientBackground)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(top = 12.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            WelcomeHeader(onNavigateToProfile = onNavigateToProfile)
-            Spacer(modifier = Modifier.height(20.dp))
-            if (userRole == UserRole.Teacher) {
-                TeacherSummaryCard()
-            } else {
-                CreditStatusCard()
+        when (val current = state) {
+            is ProfileUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = ColorPrimary)
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            if (userRole == UserRole.Student) {
-                SectionLabel("Активность дня")
-                Spacer(modifier = Modifier.height(8.dp))
-                DailyActivityRow()
-                Spacer(modifier = Modifier.height(12.dp))
-                NextSessionCard()
-                Spacer(modifier = Modifier.height(10.dp))
-                InjuryWarningCard()
+            is ProfileUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = current.message,
+                        color = ColorRed,
+                        fontSize = 16.sp
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(20.dp))
-            SectionLabel("Быстрые действия")
-            Spacer(modifier = Modifier.height(12.dp))
-            QuickActionButtons(
-                userRole = userRole,
-                onNavigateToPlans = onNavigateToPlans,
-                onNavigateToChatbot = onNavigateToChatbot,
-                onNavigateToStudents = onNavigateToStudents,
-                onNavigateToLMSAttendance = onNavigateToLMSAttendance,
-                onNavigateToQRScanner = onNavigateToQRScanner,
-                onNavigateToAchievements = onNavigateToAchievements
-            )
+            is ProfileUiState.Loaded -> {
+                val profile = current.profile
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp)
+                        .padding(top = 12.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    WelcomeHeader(
+                        profile = profile,
+                        onNavigateToProfile = onNavigateToProfile
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    if (userRole == UserRole.Teacher) {
+                        TeacherSummaryCard()
+                    } else {
+                        CreditStatusCard()
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (userRole == UserRole.Student) {
+                        SectionLabel("Активность дня")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DailyActivityRow()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        NextSessionCard()
+                        Spacer(modifier = Modifier.height(10.dp))
+                        InjuryWarningCard()
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SectionLabel("Быстрые действия")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    QuickActionButtons(
+                        userRole = userRole,
+                        onNavigateToPlans = onNavigateToPlans,
+                        onNavigateToChatbot = onNavigateToChatbot,
+                        onNavigateToStudents = onNavigateToStudents,
+                        onNavigateToLMSAttendance = onNavigateToLMSAttendance,
+                        onNavigateToQRScanner = onNavigateToQRScanner,
+                        onNavigateToAchievements = onNavigateToAchievements
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun WelcomeHeader(onNavigateToProfile: () -> Unit) {
+private fun WelcomeHeader(
+    profile: UserProfile,
+    onNavigateToProfile: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -128,14 +164,14 @@ private fun WelcomeHeader(onNavigateToProfile: () -> Unit) {
                 color = ColorTextMuted
             )
             Text(
-                text = "Amir Seitkali",
+                text = profile.name,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = ColorDark
             )
         }
         AvatarBadge(
-            initials = "AS",
+            initials = profile.initials,
             modifier = Modifier.clickable { onNavigateToProfile() }
         )
     }

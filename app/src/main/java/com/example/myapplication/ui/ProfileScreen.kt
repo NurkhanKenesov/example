@@ -19,6 +19,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.*
 
 // Design tokens
 private val ColorPrimary = Color(0xFF6C63FF)
@@ -41,8 +44,10 @@ fun ProfileScreen(
     onBackClick: () -> Unit = {},
     onNavigateToMuscleFatigue: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    viewModel: UserProfileViewModel = viewModel()
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
     Box(
@@ -54,28 +59,55 @@ fun ProfileScreen(
                 )
             )
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Scrollable content
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(scrollState)
-            ) {
-                TopNavBar(
-                    onBackClick = onBackClick,
-                    onSettingsClick = onSettingsClick
-                )
-                AvatarSection()
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionLabel(text = "БИОМЕТРИЯ")
-                BiometricsCard()
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionLabel(text = "МЕДИЦИНСКАЯ КАРТА")
-                MedicalCard(onNavigateToMuscleFatigue = onNavigateToMuscleFatigue)
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionLabel(text = "ФИЗИЧЕСКИЕ ТЕСТЫ")
-                PhysicalTestsCard(onNavigateToStats = onNavigateToStats)
-                Spacer(modifier = Modifier.height(16.dp))
+        when (val current = state) {
+            is ProfileUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = ColorPrimary)
+                }
+            }
+            is ProfileUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = current.message,
+                        color = ColorRed,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+            is ProfileUiState.Loaded -> {
+                val profile = current.profile
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(scrollState)
+                    ) {
+                        TopNavBar(
+                            onBackClick = onBackClick,
+                            onSettingsClick = onSettingsClick
+                        )
+                        AvatarSection(profile = profile)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SectionLabel(text = "БИОМЕТРИЯ")
+                        BiometricsCard(profile = profile)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SectionLabel(text = "МЕДИЦИНСКАЯ КАРТА")
+                        MedicalCard(
+                            profile = profile,
+                            onNavigateToMuscleFatigue = onNavigateToMuscleFatigue
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SectionLabel(text = "ФИЗИЧЕСКИЕ ТЕСТЫ")
+                        PhysicalTestsCard(onNavigateToStats = onNavigateToStats)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             }
         }
     }
@@ -116,7 +148,7 @@ private fun TopNavBar(
 }
 
 @Composable
-private fun AvatarSection() {
+private fun AvatarSection(profile: UserProfile) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,7 +168,7 @@ private fun AvatarSection() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "AS",
+                text = profile.initials,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
@@ -147,7 +179,7 @@ private fun AvatarSection() {
 
         // Name
         Text(
-            text = "Amir Seitkali",
+            text = profile.name,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = ColorTextDark
@@ -157,7 +189,7 @@ private fun AvatarSection() {
 
         // Email
         Text(
-            text = "student1@smartpe.edu",
+            text = profile.email,
             fontSize = 13.sp,
             fontWeight = FontWeight.Normal,
             color = ColorTextMedium
@@ -171,12 +203,12 @@ private fun AvatarSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             ProfileTag(
-                text = "🎓 Студент",
+                text = if (profile.role == "teacher") "👩‍🏫 Преподаватель" else "🎓 Студент",
                 textColor = ColorPrimary,
                 backgroundColor = ColorPrimaryLight
             )
             ProfileTag(
-                text = "1 basic",
+                text = "${profile.medicalGroup.displayName.lowercase()} (${profile.medicalGroup.name.lowercase()})",
                 textColor = ColorGreen,
                 backgroundColor = ColorGreenLight
             )
@@ -218,7 +250,7 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun BiometricsCard() {
+private fun BiometricsCard(profile: UserProfile) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,16 +265,16 @@ private fun BiometricsCard() {
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            BiometricItem(label = "Возраст", value = "22", unit = "лет")
+            BiometricItem(label = "Возраст", value = profile.age.toString(), unit = "лет")
             BiometricDivider()
-            BiometricItem(label = "Рост", value = "178", unit = "см")
+            BiometricItem(label = "Рост", value = profile.heightCm.toString(), unit = "см")
             BiometricDivider()
-            BiometricItem(label = "Вес", value = "74", unit = "кг")
+            BiometricItem(label = "Вес", value = "%.0f".format(profile.weightKg), unit = "кг")
             BiometricDivider()
             BiometricItem(
                 label = "ИМТ",
-                value = "23.4",
-                unit = "норма",
+                value = "%.1f".format(profile.bmi),
+                unit = profile.bmiLabel.lowercase(),
                 valueColor = ColorGreen
             )
         }
@@ -291,7 +323,10 @@ private fun BiometricDivider() {
 }
 
 @Composable
-private fun MedicalCard(onNavigateToMuscleFatigue: () -> Unit = {}) {
+private fun MedicalCard(
+    profile: UserProfile,
+    onNavigateToMuscleFatigue: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,7 +356,7 @@ private fun MedicalCard(onNavigateToMuscleFatigue: () -> Unit = {}) {
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Основная (basic)",
+                        text = "${profile.medicalGroup.displayName} (${profile.medicalGroup.name.lowercase()})",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = ColorGreen
