@@ -113,9 +113,7 @@ Scaffold(
             composable<LoginRoute> {
                 LoginScreen(
                     onBackClick = { navController.popBackStack() },
-                    onLoginSuccess = { email, password ->
-                        val role = deriveRoleFromEmail(email)
-                        currentRole = role
+                    onLoginSuccess = {
                         navController.navigate(HomeRoute) {
                             popUpTo(LoginRoute) {
                                 inclusive = true
@@ -128,8 +126,7 @@ Scaffold(
             composable<RegisterRoute> {
                 RegisterScreen(
                     onBackClick = { navController.popBackStack() },
-                    onRegisterSuccess = { _, _, _, role ->
-                        currentRole = role
+                    onRegisterSuccess = {
                         navController.navigate(HomeRoute)
                     }
                 )
@@ -242,7 +239,9 @@ Scaffold(
                     total = route.total,
                     onRetry = {
                         navController.navigate(QuizRoute) {
-                            popUpTo(QuizResultRoute) { inclusive = true }
+                            popUpTo(QuizResultRoute(score = route.score, total = route.total)) {
+                                inclusive = true
+                            }
                         }
                     },
                     onGoHome = {

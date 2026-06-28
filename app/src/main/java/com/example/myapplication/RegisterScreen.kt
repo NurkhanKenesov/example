@@ -38,167 +38,135 @@ private val RegRuleInactive = Color(0x4D0F0F23)
 
 enum class UserRole { Student, Teacher }
 
+private fun isEmailValid(email: String): Boolean = email.contains("@")
+
 @Composable
 fun RegisterScreen(
-    onBackClick: () -> Unit = {},
-    onRegisterSuccess: (email: String, password: String, studentId: String, role: UserRole) -> Unit = { _, _, _, _ -> }
+    uiState: AuthUiState = AuthUiState.Idle,
+    onRegisterClick: (email: String, password: String, studentId: String, role: UserRole) -> Unit = { _, _, _, _ -> },
+    onRegisterSuccess: () -> Unit = {},
+    onErrorDismiss: () -> Unit = {},
+    onBackClick: () -> Unit = {}
 ) {
     var selectedRole by remember { mutableStateOf(UserRole.Student) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var studentId by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val hasMinLength = password.length >= 8
     val hasUpperAndDigit = password.any { it.isUpperCase() } && password.any { it.isDigit() }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(RegBackgroundStart, RegBackgroundEnd))
+    
+    val isLoading = uiState is AuthUiState.Loading
+    val errorMessage = (uiState as? AuthUiState.Error)?.message
+    val isFormValid = isEmailValid(email) && hasMinLength && hasUpperAndDigit && !isLoading
+    
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Success) {
+            onRegisterSuccess()
+        }
+    }
+    
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                duration = SnackbarDuration.Short
             )
+            onErrorDismiss()
+        }
+    }
+    
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = Color(0xFFF87171),
+                    contentColor = Color.White
+                )
+            }
+        }
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Navigation bar
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-            ) {
-                Text(
-                    text = "‹ Назад",
-                    color = RegPurple,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier.clickable { onBackClick() }
+                .background(
+                    Brush.verticalGradient(listOf(RegBackgroundStart, RegBackgroundEnd))
                 )
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Регистрация",
-                        color = RegDarkBlue,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                // Spacer to balance the back button width
-                Spacer(modifier = Modifier.width(56.dp))
-            }
-
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                // Page title
-                Text(
-                    text = "Создайте аккаунт",
-                    color = RegDarkBlue,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(bottom = 14.dp)
-                )
-
-                // Role toggle
-                RoleToggle(
-                    selectedRole = selectedRole,
-                    onRoleSelected = { selectedRole = it },
+                // Navigation bar
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 14.dp)
-                )
-
-                // Email field
-                RegisterFieldLabel(text = "EMAIL")
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = {
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = "‹ Назад",
+                        color = RegPurple,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.clickable { onBackClick() }
+                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
-                            text = "name@university.edu",
-                            color = RegDarkBlueSubtle,
-                            fontSize = 15.sp
+                            text = "Регистрация",
+                            color = RegDarkBlue,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = RegFieldBackground,
-                        focusedContainerColor = RegFieldBackground,
-                        unfocusedBorderColor = RegFieldBorder,
-                        focusedBorderColor = RegPurple,
-                        cursorColor = RegPurple
-                    ),
+                    }
+                    // Spacer to balance the back button width
+                    Spacer(modifier = Modifier.width(56.dp))
+                }
+
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 14.dp)
-                )
+                        .padding(horizontal = 24.dp)
+                ) {
+                    // Page title
+                    Text(
+                        text = "Создайте аккаунт",
+                        color = RegDarkBlue,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(bottom = 14.dp)
+                    )
 
-                // Password field
-                RegisterFieldLabel(text = "ПАРОЛЬ")
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = {
-                        Text(
-                            text = "Минимум 8 символов",
-                            color = RegDarkBlueSubtle,
-                            fontSize = 15.sp
-                        )
-                    },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = RegFieldBackground,
-                        focusedContainerColor = RegFieldBackground,
-                        unfocusedBorderColor = RegFieldBorder,
-                        focusedBorderColor = RegPurple,
-                        cursorColor = RegPurple
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
+                    // Role toggle
+                    RoleToggle(
+                        selectedRole = selectedRole,
+                        onRoleSelected = { selectedRole = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp)
+                    )
 
-                // Password validation rules
-                PasswordRule(
-                    label = "Минимум 8 символов",
-                    isMet = hasMinLength,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                PasswordRule(
-                    label = "Заглавная буква и цифра",
-                    isMet = hasUpperAndDigit,
-                    modifier = Modifier.padding(bottom = 14.dp)
-                )
-
-                // Student ID field (shown for Student role)
-                if (selectedRole == UserRole.Student) {
-                    RegisterFieldLabel(text = "STUDENT ID")
+                    // Email field
+                    RegisterFieldLabel(text = "EMAIL")
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
-                        value = studentId,
-                        onValueChange = { studentId = it },
+                        value = email,
+                        onValueChange = { email = it },
                         placeholder = {
                             Text(
-                                text = "Ваш ID в системе",
+                                text = "name@university.edu",
                                 color = RegDarkBlueSubtle,
                                 fontSize = 15.sp
                             )
                         },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedContainerColor = RegFieldBackground,
@@ -209,37 +177,114 @@ fun RegisterScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 24.dp)
+                            .padding(bottom = 14.dp)
                     )
-                } else {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
 
-                // Register button
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(RegPurple, RegViolet)
+                    // Password field
+                    RegisterFieldLabel(text = "ПАРОЛЬ")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = {
+                            Text(
+                                text = "Минимум 8 символов",
+                                color = RegDarkBlueSubtle,
+                                fontSize = 15.sp
                             )
-                        )
-                        .clickable {
-                            onRegisterSuccess(email, password, studentId, selectedRole)
-                        }
-                ) {
-                    Text(
-                        text = "Зарегистрироваться",
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold
+                        },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = RegFieldBackground,
+                            focusedContainerColor = RegFieldBackground,
+                            unfocusedBorderColor = RegFieldBorder,
+                            focusedBorderColor = RegPurple,
+                            cursorColor = RegPurple
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
                     )
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    // Password validation rules
+                    PasswordRule(
+                        label = "Минимум 8 символов",
+                        isMet = hasMinLength,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    PasswordRule(
+                        label = "Заглавная буква и цифра",
+                        isMet = hasUpperAndDigit,
+                        modifier = Modifier.padding(bottom = 14.dp)
+                    )
+
+                    // Student ID field (shown for Student role)
+                    if (selectedRole == UserRole.Student) {
+                        RegisterFieldLabel(text = "STUDENT ID")
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = studentId,
+                            onValueChange = { studentId = it },
+                            placeholder = {
+                                Text(
+                                    text = "Ваш ID в системе",
+                                    color = RegDarkBlueSubtle,
+                                    fontSize = 15.sp
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = RegFieldBackground,
+                                focusedContainerColor = RegFieldBackground,
+                                unfocusedBorderColor = RegFieldBorder,
+                                focusedBorderColor = RegPurple,
+                                cursorColor = RegPurple
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 24.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    // Register button
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(RegPurple, RegViolet)
+                                )
+                            )
+                            .clickable(enabled = isFormValid) {
+                                onRegisterClick(email, password, studentId, selectedRole)
+                            }
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Зарегистрироваться",
+                                color = Color.White,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
     }

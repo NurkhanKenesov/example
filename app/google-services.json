@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "515723620808",
+    "project_id": "smart-pe-app",
+    "storage_bucket": "smart-pe-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515723620808:android:ce0f347af9db28b8dd50fd",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-AWao8b8p8srnCgcSG6seEH4wT4PqcEo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
