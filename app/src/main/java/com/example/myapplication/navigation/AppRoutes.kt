@@ -18,3 +18,10 @@ import kotlinx.serialization.Serializable
 @Serializable data object LMSAttendanceRoute
 @Serializable data object AchievementsRoute
 @Serializable data object QRScannerRoute
+@Serializable data object SettingsRoute
+@Serializable data object TheoryRoute
+@Serializable data object QuizRoute
+@Serializable data class QuizResultRoute(
+    val score: Int = 0,
+    val total: Int = 8
+)

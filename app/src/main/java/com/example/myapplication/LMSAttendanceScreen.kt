@@ -35,7 +35,8 @@ private val GradientQrButton = Brush.horizontalGradient(listOf(ColorGreen, Color
 @Composable
 fun LMSAttendanceScreen(
     onBackClick: () -> Unit = {},
-    onNavigateToQRScanner: () -> Unit = {}
+    onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToTheory: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -59,7 +60,7 @@ fun LMSAttendanceScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 NormativesSection()
                 Spacer(modifier = Modifier.height(20.dp))
-                TheoryTestsSection()
+                TheoryTestsSection(onTestClick = onNavigateToTheory)
             }
     }
 }
@@ -262,13 +263,14 @@ private fun NormativeRow(
 }
 
 @Composable
-private fun TheoryTestsSection() {
+private fun TheoryTestsSection(onTestClick: () -> Unit = {}) {
     SectionHeader("ТЕОРЕТИЧЕСКИЕ ТЕСТЫ")
     Spacer(modifier = Modifier.height(8.dp))
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .clickable(onClick = onTestClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ColorCardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

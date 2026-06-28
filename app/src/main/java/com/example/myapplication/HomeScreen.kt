@@ -58,27 +58,37 @@ private val GradientAvatar = Brush.linearGradient(
 
 @Composable
 fun HomeScreen(
+    userRole: UserRole = UserRole.Student,
     onNavigateToPlans: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToChatbot: () -> Unit = {}
+    onNavigateToChatbot: () -> Unit = {},
+    onNavigateToStudents: () -> Unit = {},
+    onNavigateToLMSAttendance: () -> Unit = {},
+    onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToAchievements: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GradientBackground)
     ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
-                    .padding(top = 12.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                WelcomeHeader(onNavigateToProfile = onNavigateToProfile)
-                Spacer(modifier = Modifier.height(20.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(top = 12.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            WelcomeHeader(onNavigateToProfile = onNavigateToProfile)
+            Spacer(modifier = Modifier.height(20.dp))
+            if (userRole == UserRole.Teacher) {
+                TeacherSummaryCard()
+            } else {
                 CreditStatusCard()
-                Spacer(modifier = Modifier.height(16.dp))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            if (userRole == UserRole.Student) {
                 SectionLabel("Активность дня")
                 Spacer(modifier = Modifier.height(8.dp))
                 DailyActivityRow()
@@ -86,15 +96,21 @@ fun HomeScreen(
                 NextSessionCard()
                 Spacer(modifier = Modifier.height(10.dp))
                 InjuryWarningCard()
-                Spacer(modifier = Modifier.height(20.dp))
-                SectionLabel("Быстрые действия")
-                Spacer(modifier = Modifier.height(12.dp))
-                QuickActionButtons(
-                    onNavigateToPlans = onNavigateToPlans,
-                    onNavigateToChatbot = onNavigateToChatbot
-                )
             }
+            Spacer(modifier = Modifier.height(20.dp))
+            SectionLabel("Быстрые действия")
+            Spacer(modifier = Modifier.height(12.dp))
+            QuickActionButtons(
+                userRole = userRole,
+                onNavigateToPlans = onNavigateToPlans,
+                onNavigateToChatbot = onNavigateToChatbot,
+                onNavigateToStudents = onNavigateToStudents,
+                onNavigateToLMSAttendance = onNavigateToLMSAttendance,
+                onNavigateToQRScanner = onNavigateToQRScanner,
+                onNavigateToAchievements = onNavigateToAchievements
+            )
         }
+    }
 }
 
 @Composable
@@ -413,50 +429,208 @@ private fun InjuryWarningCard() {
 
 @Composable
 private fun QuickActionButtons(
+    userRole: UserRole,
     onNavigateToPlans: () -> Unit,
-    onNavigateToChatbot: () -> Unit
+    onNavigateToChatbot: () -> Unit,
+    onNavigateToStudents: () -> Unit,
+    onNavigateToLMSAttendance: () -> Unit,
+    onNavigateToQRScanner: () -> Unit,
+    onNavigateToAchievements: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Primary CTA
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(GradientPrimary)
-                .clickable { onNavigateToPlans() }
-                .padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        if (userRole == UserRole.Teacher) {
+            TeacherQuickActions(
+                onNavigateToStudents = onNavigateToStudents,
+                onNavigateToLMSAttendance = onNavigateToLMSAttendance
+            )
+        } else {
+            StudentQuickActions(
+                onNavigateToPlans = onNavigateToPlans,
+                onNavigateToChatbot = onNavigateToChatbot,
+                onNavigateToQRScanner = onNavigateToQRScanner,
+                onNavigateToAchievements = onNavigateToAchievements
+            )
+        }
+    }
+}
+
+@Composable
+private fun StudentQuickActions(
+    onNavigateToPlans: () -> Unit,
+    onNavigateToChatbot: () -> Unit,
+    onNavigateToQRScanner: () -> Unit,
+    onNavigateToAchievements: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(GradientPrimary)
+            .clickable { onNavigateToPlans() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "🚀 Начать тренировку",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
+            .clickable { onNavigateToQRScanner() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "📷 QR-сканер",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ColorDark,
+            textAlign = TextAlign.Center
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
+            .clickable { onNavigateToAchievements() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "🏆 Достижения",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ColorDark,
+            textAlign = TextAlign.Center
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
+            .clickable { onNavigateToChatbot() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "🤖 ИИ-Ассистент",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ColorDark,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun TeacherQuickActions(
+    onNavigateToStudents: () -> Unit,
+    onNavigateToLMSAttendance: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(GradientPrimary)
+            .clickable { onNavigateToStudents() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "👨‍🏫 Список студентов",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
+            .clickable { onNavigateToLMSAttendance() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "📖 Журнал посещаемости",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ColorDark,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun TeacherSummaryCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF6C63FF).copy(alpha = 0.08f),
+                        Color.White
+                    )
+                )
+            )
+            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Column {
             Text(
-                text = "🚀 Начать тренировку",
-                fontSize = 16.sp,
+                text = "Статистика группы",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-        }
-        // Secondary CTA
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(ColorSurface)
-                .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
-                .clickable { onNavigateToChatbot() }
-                .padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "🤖 ИИ-Ассистент",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
                 color = ColorDark,
-                textAlign = TextAlign.Center
+                modifier = Modifier.padding(bottom = 12.dp)
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TeacherStatItem(value = "24", label = "Студента")
+                TeacherStatItem(value = "18", label = "Присутствие")
+                TeacherStatItem(value = "3", label = "Травмы")
+            }
         }
+    }
+}
+
+@Composable
+private fun TeacherStatItem(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = ColorPrimary
+        )
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Normal,
+            color = ColorTextMuted
+        )
     }
 }
 

@@ -40,7 +40,8 @@ private val ColorDivider = Color(0x110F0F23)
 fun ProfileScreen(
     onBackClick: () -> Unit = {},
     onNavigateToMuscleFatigue: () -> Unit = {},
-    onNavigateToStats: () -> Unit = {}
+    onNavigateToStats: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -60,7 +61,10 @@ fun ProfileScreen(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                TopNavBar(onBackClick = onBackClick)
+                TopNavBar(
+                    onBackClick = onBackClick,
+                    onSettingsClick = onSettingsClick
+                )
                 AvatarSection()
                 Spacer(modifier = Modifier.height(8.dp))
                 SectionLabel(text = "БИОМЕТРИЯ")
@@ -78,7 +82,10 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun TopNavBar(onBackClick: () -> Unit = {}) {
+private fun TopNavBar(
+    onBackClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -102,7 +109,8 @@ private fun TopNavBar(onBackClick: () -> Unit = {}) {
         Text(
             text = "⚙️",
             fontSize = 15.sp,
-            color = ColorPrimary
+            color = ColorPrimary,
+            modifier = Modifier.clickable { onSettingsClick() }
         )
     }
 }
