@@ -30,8 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val ColorDark = Color(0xFF0F0F23)
 private val ColorDark50 = Color(0x800F0F23)
@@ -62,59 +62,23 @@ private val AttendanceGradient = Brush.linearGradient(
     start = Offset(0f, 0f), end = Offset(Float.MAX_VALUE, 0f)
 )
 
-// ── Data models ───────────────────────────────────────────────────────────────
-
 enum class HealthGroup { BASIC, PREPARED, SPECIAL }
 
-data class Student(
-    val id: Int,
-    val initials: String,
-    val name: String,
-    val gender: String,
-    val age: String,
-    val group: HealthGroup,
-    val score: String,
+private data class UiStudent(
+    val id: String = "",
+    val initials: String = "",
+    val name: String = "",
+    val gender: String = "--",
+    val age: String = "--",
+    val group: HealthGroup = HealthGroup.BASIC,
+    val score: String = "--",
     val hasAlert: Boolean = false,
-    val avatarGradient: Brush
-)
-
-private val sampleStudents = listOf(
-    Student(
-        id = 1, initials = "AS", name = "Amir Seitkali",
-        gender = "Male", age = "22 года", group = HealthGroup.BASIC, score = "3.2/4",
-        avatarGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF6C63FF), Color(0xFF8B5CF6)),
-            start = Offset(0f, Float.MAX_VALUE), end = Offset(Float.MAX_VALUE, 0f)
-        )
-    ),
-    Student(
-        id = 2, initials = "ZA", name = "Zarina Akhmetova",
-        gender = "Female", age = "20 лет", group = HealthGroup.PREPARED, score = "2.5/4",
-        hasAlert = true,
-        avatarGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFFF97316), Color(0xFFFBBF24)),
-            start = Offset(0f, Float.MAX_VALUE), end = Offset(Float.MAX_VALUE, 0f)
-        )
-    ),
-    Student(
-        id = 3, initials = "RN", name = "Ruslan Nurlanov",
-        gender = "Male", age = "21 год", group = HealthGroup.BASIC, score = "3.8/4",
-        avatarGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF22D3EE), Color(0xFF4ADE80)),
-            start = Offset(0f, Float.MAX_VALUE), end = Offset(Float.MAX_VALUE, 0f)
-        )
-    ),
-    Student(
-        id = 4, initials = "DI", name = "Dias Issayev",
-        gender = "Male", age = "19 лет", group = HealthGroup.SPECIAL, score = "1.8/4",
-        avatarGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFFF87171), Color(0xFFFB923C)),
-            start = Offset(0f, Float.MAX_VALUE), end = Offset(Float.MAX_VALUE, 0f)
-        )
+    val avatarGradient: Brush = Brush.linearGradient(
+        colors = listOf(ColorPurple, ColorViolet)
     )
 )
 
-private val filterChips = listOf("Все", "basic", "prepared", "special", "С травмами")
+private val emptyStudents = emptyList<UiStudent>()
 
 data class TeacherNavItem(val label: String, val icon: ImageVector)
 
@@ -125,15 +89,24 @@ private val teacherNavItems = listOf(
     TeacherNavItem("Профиль", Icons.Outlined.Person)
 )
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-
 @Composable
 fun StudentsScreen(
     onBackClick: () -> Unit = {}
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("Все") }
+    val viewModel: StudentsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedNavIndex by remember { mutableIntStateOf(1) }
+
+    val students = when (uiState) {
+        is StudentsUiState.Loaded -> (uiState as StudentsUiState.Loaded).students.map { 
+            UiStudent(
+                id = it.id,
+                name = it.name,
+                score = it.score
+            )
+        }
+        else -> emptyStudents
+    }
 
     Scaffold(
         containerColor = ColorSurface,
@@ -152,7 +125,7 @@ fun StudentsScreen(
                     color = ColorPurple,
                     modifier = Modifier.clickable { onBackClick() }
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
             }
         },
         bottomBar = { StudentsBottomNav(selectedNavIndex) { selectedNavIndex = it } }
@@ -168,30 +141,17 @@ fun StudentsScreen(
             Spacer(Modifier.height(12.dp))
             AttendanceCard(modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(18.dp))
-            SearchField(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            SearchField(modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(14.dp))
-            FilterChipRow(selected = selectedFilter, onSelect = { selectedFilter = it })
+            FilterChipRow(selected = "Все", onSelect = {})
             Spacer(Modifier.height(10.dp))
-            StudentList(
-                students = sampleStudents,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            StudentList(students = students, modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(16.dp))
-            FooterLabel(
-                shown = sampleStudents.size,
-                total = 500,
-                modifier = Modifier.fillMaxWidth()
-            )
+            FooterLabel(shown = students.size, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(20.dp))
         }
     }
 }
-
-// ── Sub-composables ───────────────────────────────────────────────────────────
 
 @Composable
 private fun ScreenTitle() {
@@ -219,14 +179,14 @@ private fun AttendanceCard(modifier: Modifier = Modifier) {
     ) {
         Column {
             Text(
-                text = "Посещаемость: 85%",
+                text = "-- посещаемость",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = ColorDark
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = "Факультет ИТ",
+                text = "--",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = ColorDark50
@@ -254,11 +214,7 @@ private fun ExcelReportButton() {
 }
 
 @Composable
-private fun SearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun SearchField(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -270,21 +226,18 @@ private fun SearchField(
     ) {
         Text(text = "🔍", fontSize = 16.sp, color = ColorDark30)
         Spacer(Modifier.width(10.dp))
-        if (query.isEmpty()) {
-            Text(
-                text = "Поиск по имени или ID...",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Normal,
-                color = ColorDark30
-            )
-        } else {
-            Text(text = query, fontSize = 15.sp, color = ColorDark)
-        }
+        Text(
+            text = "Поиск по имени или ID...",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Normal,
+            color = ColorDark30
+        )
     }
 }
 
 @Composable
 private fun FilterChipRow(selected: String, onSelect: (String) -> Unit) {
+    val filterChips = listOf("Все", "basic", "prepared", "special", "С травмами")
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,14 +274,35 @@ private fun FilterChipItem(label: String, isSelected: Boolean, onClick: () -> Un
 }
 
 @Composable
-private fun StudentList(students: List<Student>, modifier: Modifier = Modifier) {
+private fun StudentList(students: List<UiStudent>, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        students.forEach { student -> StudentCard(student) }
+        if (students.isEmpty()) {
+            EmptyStudentsState()
+        } else {
+            students.forEach { student -> StudentCard(student) }
+        }
     }
 }
 
 @Composable
-private fun StudentCard(student: Student) {
+private fun EmptyStudentsState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "--",
+            color = ColorDark30,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.W700
+        )
+    }
+}
+
+@Composable
+private fun StudentCard(student: UiStudent) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -410,18 +384,6 @@ private fun HealthGroupBadge(group: HealthGroup) {
 }
 
 @Composable
-private fun FooterLabel(shown: Int, total: Int, modifier: Modifier = Modifier) {
-    Text(
-        text = "Показано $shown из $total студентов",
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Normal,
-        color = ColorDark30,
-        textAlign = TextAlign.Center,
-        modifier = modifier
-    )
-}
-
-@Composable
 private fun StudentsBottomNav(selectedIndex: Int, onSelect: (Int) -> Unit) {
     NavigationBar(
         containerColor = Color.White,
@@ -462,7 +424,17 @@ private fun StudentsBottomNav(selectedIndex: Int, onSelect: (Int) -> Unit) {
     }
 }
 
-// ── Preview ───────────────────────────────────────────────────────────────────
+@Composable
+private fun FooterLabel(shown: Int, modifier: Modifier = Modifier) {
+    Text(
+        text = "Показано $shown из -- студентов",
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Normal,
+        color = ColorDark30,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+    )
+}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

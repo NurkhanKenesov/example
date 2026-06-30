@@ -43,14 +43,14 @@ private data class Achievement(
 )
 
 private val achievements = listOf(
-    Achievement("🌅", "Ранняя пташка", "Тренировка до 8:00 утра"),
-    Achievement("🏃", "Марафонец", "10 км за одну неделю"),
+    Achievement("🌅", "Ранняя пташка", "Тренировка до 8:00 утра", unlocked = false),
+    Achievement("🏃", "Марафонец", "10 км за одну неделю", unlocked = false),
     Achievement("🔥", "Железная воля", "Тренировки 5 дней подряд", unlocked = false),
     Achievement("💪", "Атлет 1 уровня", "Сдать все нормативы на 5", unlocked = false)
 )
 
 @Composable
-fun AchievementsScreen(onBackClick: () -> Unit = {}) {
+fun AchievementsScreen(onBackClick: () -> Unit = {}, onNavigateToLeaderboard: () -> Unit = {}) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Box(
@@ -59,17 +59,19 @@ fun AchievementsScreen(onBackClick: () -> Unit = {}) {
             .background(AchievGradientBackground)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Nav bar
             AchievNavBar(onBackClick = onBackClick)
 
-            // Tab switcher
             AchievTabSwitcher(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { index ->
+                    selectedTab = index
+                    if (index == 1) {
+                        onNavigateToLeaderboard()
+                    }
+                },
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
 
-            // Scrollable content
             Column(
                 modifier = Modifier
                     .weight(1f)

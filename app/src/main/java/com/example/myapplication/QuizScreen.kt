@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 // ── Data classes ──────────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ fun QuizScreen(
     val currentQuestion = quizQuestions[quizState.currentIndex]
     val selectedAnswer = quizState.selectedAnswers[quizState.currentIndex]
     val progress = (quizState.currentIndex + 1).toFloat() / totalQuestions
+    val quizScoresViewModel: QuizScoresViewModel = viewModel()
 
     Box(
         modifier = Modifier
@@ -291,16 +293,15 @@ fun QuizScreen(
                 onClick = {
                     if (selectedAnswer != null) {
                         if (quizState.currentIndex < totalQuestions - 1) {
-                            // Move to next question
                             quizState = quizState.copy(
                                 currentIndex = quizState.currentIndex + 1
                             )
                         } else {
-                            // Calculate score and complete
                             val correctCount = quizQuestions.filterIndexed { index, question ->
                                 quizState.selectedAnswers[index] == question.correctIndex
                             }.size
                             quizState = quizState.copy(isCompleted = true)
+                            quizScoresViewModel.saveScore(correctCount, totalQuestions)
                             onQuizComplete(correctCount, totalQuestions)
                         }
                     }

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// ── Design tokens ──────────────────────────────────────────────────────────────
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
@@ -38,8 +38,6 @@ private val Amber = Color(0xFFFB923C)
 private val AmberBg = Color(0x26FB923C)
 private val Red = Color(0xFFF87171)
 private val RedBg = Color(0x26F87171)
-
-// ── Data model ─────────────────────────────────────────────────────────────────
 
 enum class PlanStatus(
     val emoji: String,
@@ -60,49 +58,25 @@ data class TrainingPlan(
     val status: PlanStatus,
     val statusNote: String,
     val progressFraction: Float,
-    val currentDayIndex: Int,   // 0 = before ПН, 1 = at ПН, etc. (-1 = none)
+    val currentDayIndex: Int,
 )
 
-private val samplePlans = listOf(
-    TrainingPlan(
-        id = 1247,
-        name = "Тренировочный план #1247",
-        exerciseCount = 21,
-        date = "2026-06-09",
-        status = PlanStatus.COMPLETED,
-        statusNote = "👍 Liked",
-        progressFraction = 1f,
-        currentDayIndex = -1,
-    ),
-    TrainingPlan(
-        id = 1248,
-        name = "Тренировочный план #1248",
-        exerciseCount = 21,
-        date = "2026-06-11",
-        status = PlanStatus.SCHEDULED,
-        statusNote = "Активный",
-        progressFraction = 0.15f,
-        currentDayIndex = 0,
-    ),
-    TrainingPlan(
-        id = 1245,
-        name = "Тренировочный план #1245",
-        exerciseCount = 21,
-        date = "2026-06-02",
-        status = PlanStatus.DISCARDED,
-        statusNote = "👎 Disliked",
-        progressFraction = 0f,
-        currentDayIndex = -1,
-    ),
-)
-
-// ── Screen ─────────────────────────────────────────────────────────────────────
+private val emptyPlans = emptyList<TrainingPlan>()
 
 @Composable
 fun PlanListScreen(
     onPlanClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
+    val viewModel: PlansViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // Map Firestore plans to UI model (placeholder - will show empty state)
+    val plans = when (uiState) {
+        is PlansUiState.Loaded -> emptyPlans
+        else -> emptyPlans
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -115,7 +89,6 @@ fun PlanListScreen(
                 .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Title with back button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -143,21 +116,46 @@ fun PlanListScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Generate button
             GenerateButton()
 
             Spacer(Modifier.height(8.dp))
-
-            // Plan cards
-            samplePlans.forEach { plan ->
-                PlanCard(plan = plan, onPlanClick = onPlanClick)
-                Spacer(Modifier.height(4.dp))
+            
+            if (plans.isEmpty()) {
+                EmptyPlansState()
             }
         }
     }
 }
 
-// ── Generate button ────────────────────────────────────────────────────────────
+@Composable
+private fun EmptyPlansState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "—",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.W700,
+            color = Ebony.copy(alpha = 0.2f)
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Планы отсутствуют",
+            fontSize = 16.sp,
+            color = Ebony.copy(alpha = 0.5f)
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Создайте первый план или подождите, пока преподаватель назначит тренировку",
+            fontSize = 13.sp,
+            color = Ebony.copy(alpha = 0.4f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
 
 @Composable
 private fun GenerateButton() {
@@ -184,8 +182,6 @@ private fun GenerateButton() {
     }
 }
 
-// ── Plan card ──────────────────────────────────────────────────────────────────
-
 @Composable
 private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
     Column(
@@ -198,7 +194,6 @@ private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
             .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        // Status badge + date row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,7 +210,6 @@ private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
 
         Spacer(Modifier.height(6.dp))
 
-        // Plan name
         Text(
             text = plan.name,
             color = Ebony,
@@ -226,7 +220,6 @@ private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
 
         Spacer(Modifier.height(2.dp))
 
-        // Exercise count + status note
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -252,7 +245,6 @@ private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
 
         Spacer(Modifier.height(12.dp))
 
-        // Weekly progress bar
         WeeklyProgressBar(
             progressFraction = plan.progressFraction,
             currentDayIndex = plan.currentDayIndex,
@@ -282,8 +274,6 @@ private fun StatusBadge(status: PlanStatus) {
     }
 }
 
-// ── Weekly progress bar ────────────────────────────────────────────────────────
-
 @Composable
 private fun WeeklyProgressBar(
     progressFraction: Float,
@@ -293,7 +283,6 @@ private fun WeeklyProgressBar(
     val trackColor = Color(0xFFF0F0F8)
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Track
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -311,11 +300,9 @@ private fun WeeklyProgressBar(
                 )
             }
 
-            // Current-day marker
             if (currentDayIndex >= 0) {
-                val markerFraction = progressFraction.coerceIn(0f, 1f)
                 Row(modifier = Modifier.fillMaxSize()) {
-                    Spacer(Modifier.weight(markerFraction.coerceAtLeast(0f)))
+                    Spacer(Modifier.weight(progressFraction.coerceAtLeast(0f)))
                     Box(
                         modifier = Modifier
                             .width(2.dp)
@@ -328,7 +315,6 @@ private fun WeeklyProgressBar(
 
         Spacer(Modifier.height(4.dp))
 
-        // Day labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -362,9 +348,6 @@ private fun DayLabel(label: String, isActive: Boolean, barColor: Color) {
     }
 }
 
-
-
-// ── Preview ────────────────────────────────────────────────────────────────────
 
 @Preview(showSystemUi = true)
 @Composable

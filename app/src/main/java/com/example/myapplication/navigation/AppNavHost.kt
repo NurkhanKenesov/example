@@ -44,7 +44,10 @@ fun AppNavHost(
             currentDestination?.hasRoute(LMSAttendanceRoute::class) == true ||
             currentDestination?.hasRoute(AchievementsRoute::class) == true ||
             currentDestination?.hasRoute(ProfileRoute::class) == true ||
-            currentDestination?.hasRoute(StudentsRoute::class) == true
+            currentDestination?.hasRoute(StudentsRoute::class) == true ||
+            currentDestination?.hasRoute(AiChatRoute::class) == true ||
+            currentDestination?.hasRoute(WorkoutRoute::class) == true ||
+            currentDestination?.hasRoute(LeaderboardRoute::class) == true
 
     Scaffold(
         bottomBar = {
@@ -53,13 +56,15 @@ fun AppNavHost(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 8.dp
                 ) {
-                    val studentRouteMap = mapOf(
-                        "Главная"  to HomeRoute,
-                        "Планы"    to PlansRoute,
-                        "Обучение" to LMSAttendanceRoute,
-                        "Рейтинг"  to AchievementsRoute,
-                        "Профиль"  to ProfileRoute
-                    )
+val studentRouteMap = mapOf(
+                         "Главная"  to HomeRoute,
+                         "ИИ"       to AiChatRoute,
+                         "Планы"    to PlansRoute,
+                           "Обучение" to LMSAttendanceRoute,
+                             "Рейтинг"  to LeaderboardRoute,
+                             "Достижения"  to AchievementsRoute,
+                             "Профиль"  to ProfileRoute
+                         )
                     val teacherRouteMap = mapOf(
                         "Главная"  to HomeRoute,
                         "Студенты" to StudentsRoute,
@@ -69,7 +74,7 @@ fun AppNavHost(
                     val routeMap = if (currentRole == UserRole.Teacher) teacherRouteMap else studentRouteMap
                     val teacherNavItems = listOf(
                         NavItem("🏠", "Главная"),
-                        NavItem("👨‍🏫", "Студенты"),
+                        NavItem("👨\u200d🏫", "Студенты"),
                         NavItem("📅", "Планы"),
                         NavItem("👤", "Профиль")
                     )
@@ -193,7 +198,13 @@ fun AppNavHost(
             composable<MuscleFatigueRoute> { MuscleFatigueScreen(onBackClick = { navController.popBackStack() }) }
             composable<StatsRoute>         { InteractionStatsScreen(onBackClick = { navController.popBackStack() }) }
             composable<AIExplanationRoute> { AIExplanationScreen(onBackClick = { navController.popBackStack() }) }
-            composable<ChatbotRoute>       { AIChatbotScreen(onBackClick = { navController.popBackStack() }) }
+            composable<ChatbotRoute>       { AiChatScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AiChatRoute> { AiChatScreen(onBackClick = { navController.popBackStack() }) }
+            composable<WorkoutRoute> {
+                val profileState by profileViewModel.state.collectAsStateWithLifecycle()
+                val profile = (profileState as? ProfileUiState.Loaded)?.profile ?: UserProfile()
+                WorkoutRecommendationScreen(profile = profile, onBackClick = { navController.popBackStack() })
+            }
             composable<StudentsRoute>      { StudentsScreen(onBackClick = { navController.popBackStack() }) }
             composable<LMSAttendanceRoute> {
                 LMSAttendanceScreen(
@@ -202,7 +213,11 @@ fun AppNavHost(
                     onNavigateToTheory    = { navController.navigate(TheoryRoute) }
                 )
             }
-            composable<AchievementsRoute> { AchievementsScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AchievementsRoute> { AchievementsScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateToLeaderboard = { navController.navigate(LeaderboardRoute) }
+            ) }
+            composable<LeaderboardRoute> { LeaderboardScreen(onBackClick = { navController.popBackStack() }) }
             composable<QRScannerRoute>    { QRScannerScreen(navController = navController) }
             composable<SettingsRoute>     { SettingsScreen(onBackClick = { navController.popBackStack() }) }
             composable<TheoryRoute> {

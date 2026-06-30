@@ -57,11 +57,11 @@ class PreferencesManager(private val dataStore: DataStore<Preferences>) {
     }
 
     val userName: Flow<String> = dataStore.data.map { prefs ->
-        prefs[SettingsKeys.USER_NAME] ?: "Amir Seitkali"
+        prefs[SettingsKeys.USER_NAME] ?: ""
     }
 
     val userEmail: Flow<String> = dataStore.data.map { prefs ->
-        prefs[SettingsKeys.USER_EMAIL] ?: "student1@smartpe.edu"
+        prefs[SettingsKeys.USER_EMAIL] ?: ""
     }
 
     val language: Flow<Language> = dataStore.data.map { prefs ->

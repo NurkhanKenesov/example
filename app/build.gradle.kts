@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.myapplication"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.myapplication"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -57,6 +57,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-functions")
+    implementation("com.google.firebase:firebase-ai:16.0.0")
 
     // Coroutines для suspend-вызовов Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
@@ -81,6 +82,9 @@ dependencies {
 
     // DataStore — required by PreferencesManager.kt
     implementation("androidx.datastore:datastore-preferences:1.1.2")
+
+    // Health Connect — required by HealthConnectManager.kt
+    implementation("androidx.health.connect:connect-client:1.1.0-rc01")
 
     // Tests
     testImplementation(libs.junit)

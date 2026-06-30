@@ -23,8 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Design tokens ──────────────────────────────────────────────────────────────
-
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
 private val EbonyAlpha30 = Color(0x4D0F0F23)
@@ -38,49 +36,7 @@ private val GreenIconBg = Color(0x264ADE80)
 private val DividerColor = Color(0x0F000000)
 private val CardBorderColor = Color(0x12000000)
 
-// ── Data models ────────────────────────────────────────────────────────────────
-
 data class DayTab(val shortName: String, val type: String)
-
-// ── Static data ────────────────────────────────────────────────────────────────
-
-private val dayTabs = listOf(
-    DayTab("ПН", "Сила"),
-    DayTab("СР", "Сила"),
-    DayTab("ПТ", "Кардио"),
-)
-
-private val warmupSection = ExerciseSection(
-    emoji = "🔥",
-    title = "РАЗМИНКА",
-    exercises = listOf(
-        Exercise("🏃", "Jumping Jacks", "Full body warmup", 2, 20, 0.87, AmberIconBg, 2, 20),
-        Exercise("💫", "Arm Circles", "Shoulder warmup", 2, 15, 0.82, AmberIconBg, 2, 15),
-    ),
-)
-
-private val mainSection = ExerciseSection(
-    emoji = "💪",
-    title = "ОСНОВНАЯ ЧАСТЬ",
-    exercises = listOf(
-        Exercise("🦵", "Push-ups", "Chest and triceps • Сложность 2", 3, 12, 0.91, VioletIconBg, 3, 12),
-        Exercise("🤸", "Squats", "Quad and glute • Сложность 2", 3, 12, 0.88, VioletIconBg, 3, 12),
-        Exercise("🦾", "Barbell Row", "Upper back • Сложность 4", 3, 8, 0.85, VioletIconBg, 3, 8),
-    ),
-)
-
-private val cooldownSection = ExerciseSection(
-    emoji = "🧘",
-    title = "ЗАМИНКА",
-    exercises = listOf(
-        Exercise("🧘", "Hamstring Stretch", "Flexibility", 2, 1, null, GreenIconBg, 2, 1),
-        Exercise("🐄", "Cat-Cow Stretch", "Spine mobility", 2, 10, null, GreenIconBg, 2, 10),
-    ),
-)
-
-private val allSections = listOf(warmupSection, mainSection, cooldownSection)
-
-// ── Screen ─────────────────────────────────────────────────────────────────────
 
 @Composable
 fun PlanDetailScreen(
@@ -104,12 +60,7 @@ fun PlanDetailScreen(
             TopNavBar(onBackClick = onBackClick, onAIClick = onAIClick)
             DayTabsRow(selectedTabIndex = selectedTabIndex, onTabSelected = { selectedTabIndex = it })
             Spacer(Modifier.height(8.dp))
-            allSections.forEach { section ->
-                SectionHeader(emoji = section.emoji, title = section.title)
-                Spacer(Modifier.height(8.dp))
-                ExerciseCard(section = section)
-                Spacer(Modifier.height(20.dp))
-            }
+            EmptyPlanState()
         }
 
         Row(
@@ -126,7 +77,28 @@ fun PlanDetailScreen(
     }
 }
 
-// ── Top navigation bar ─────────────────────────────────────────────────────────
+@Composable
+private fun EmptyPlanState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "--",
+            color = Ebony.copy(alpha = 0.3f),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.W700
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Нет упражнений в плане",
+            color = EbonyAlpha40,
+            fontSize = 14.sp
+        )
+    }
+}
 
 @Composable
 private fun TopNavBar(onBackClick: () -> Unit, onAIClick: () -> Unit = {}) {
@@ -145,7 +117,7 @@ private fun TopNavBar(onBackClick: () -> Unit, onAIClick: () -> Unit = {}) {
             modifier = Modifier.clickable { onBackClick() },
         )
         Text(
-            text = "План #1248",
+            text = "--",
             color = Ebony,
             fontSize = 17.sp,
             fontWeight = FontWeight.W600,
@@ -160,10 +132,9 @@ private fun TopNavBar(onBackClick: () -> Unit, onAIClick: () -> Unit = {}) {
     }
 }
 
-// ── Day tabs ───────────────────────────────────────────────────────────────────
-
 @Composable
 private fun DayTabsRow(selectedTabIndex: Int, onTabSelected: (Int) -> Unit) {
+    val dayTabs = listOf(DayTab("--", "--"))
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -227,8 +198,6 @@ private fun DayTabItem(
     }
 }
 
-// ── Section header ─────────────────────────────────────────────────────────────
-
 @Composable
 private fun SectionHeader(emoji: String, title: String) {
     Text(
@@ -242,8 +211,6 @@ private fun SectionHeader(emoji: String, title: String) {
             .padding(horizontal = 20.dp),
     )
 }
-
-// ── Exercise card (white card containing rows) ─────────────────────────────────
 
 @Composable
 private fun ExerciseCard(section: ExerciseSection) {
@@ -264,8 +231,6 @@ private fun ExerciseCard(section: ExerciseSection) {
         }
     }
 }
-
-// ── Exercise row ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun ExerciseRow(exercise: Exercise, showDivider: Boolean) {
@@ -335,8 +300,6 @@ private fun ExerciseIcon(emoji: String, bg: Color) {
         Text(text = emoji, fontSize = 20.sp, textAlign = TextAlign.Center)
     }
 }
-
-// ── Preview ────────────────────────────────────────────────────────────────────
 
 @Preview(showSystemUi = true)
 @Composable

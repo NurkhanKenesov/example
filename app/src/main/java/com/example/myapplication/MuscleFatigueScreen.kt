@@ -9,6 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,9 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-// Design tokens
 private val ColorPrimary = Color(0xFF6C63FF)
 private val ColorDarkText = Color(0xFF0F0F23)
 private val ColorMutedText = Color(0x660F0F23)
@@ -35,7 +39,7 @@ private val ColorYellowIconBg = Color(0x26FBBF24)
 private val ColorGreenChipBorder = Color(0x404ADE80)
 private val ColorGreenChipBg = Color(0x1A4ADE80)
 
-private data class MuscleGroup(
+data class MuscleGroup(
     val name: String,
     val hoursRemaining: String,
     val recoveryPercent: Int,
@@ -44,19 +48,33 @@ private data class MuscleGroup(
     val barColor: Color,
 )
 
-private val recoveringMuscles = listOf(
-    MuscleGroup("Quadriceps", "42.5ч", 41, 72, ColorRed, ColorRed),
-    MuscleGroup("Hamstrings", "28.0ч", 61, 72, ColorYellow, ColorYellow),
-    MuscleGroup("Core", "5.2ч", 78, 24, ColorGreen, ColorGreen),
-    MuscleGroup("Chest", "8.3ч", 83, 48, ColorGreen, ColorGreen),
-)
+sealed interface MuscleFatigueUiState {
+    object Loading : MuscleFatigueUiState
+    data class Loaded(val recovering: List<MuscleGroup>, val recovered: List<String>) : MuscleFatigueUiState
+    data class Error(val message: String) : MuscleFatigueUiState
+}
 
-private val fullyRecoveredMuscles = listOf(
-    "Shoulders", "Biceps", "Triceps", "Back", "Glutes", "Calves"
-)
+class MuscleFatigueViewModel : androidx.lifecycle.ViewModel() {
+    private val repository = InjuryRepository()
+    
+    var uiState by mutableStateOf<MuscleFatigueUiState>(MuscleFatigueUiState.Loading)
+        private set
+
+    fun loadMuscleData() {
+        uiState = MuscleFatigueUiState.Loading
+        uiState = MuscleFatigueUiState.Loaded(emptyList(), emptyList())
+    }
+}
 
 @Composable
 fun MuscleFatigueScreen(onBackClick: () -> Unit = {}) {
+    val viewModel: MuscleFatigueViewModel = viewModel()
+    val uiState = viewModel.uiState
+
+    LaunchedEffect(Unit) {
+        viewModel.loadMuscleData()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,12 +84,63 @@ fun MuscleFatigueScreen(onBackClick: () -> Unit = {}) {
         NavBar(onBackClick)
         ScreenHeader()
         Spacer(modifier = Modifier.height(8.dp))
-        SummaryCard(modifier = Modifier.padding(horizontal = 20.dp))
+        WhenStatusCard(modifier = Modifier.padding(horizontal = 20.dp), uiState = uiState)
         Spacer(modifier = Modifier.height(12.dp))
-        MuscleListCard(modifier = Modifier.padding(horizontal = 20.dp))
-        Spacer(modifier = Modifier.height(12.dp))
-        FullyRecoveredSection(modifier = Modifier.padding(horizontal = 20.dp))
+        MuscleListCard(modifier = Modifier.padding(horizontal = 20.dp), uiState = uiState)
         Spacer(modifier = Modifier.height(112.dp))
+    }
+}
+
+@Composable
+private fun WhenStatusCard(modifier: Modifier = Modifier, uiState: MuscleFatigueUiState) {
+    val recoveringCount = when (uiState) {
+        is MuscleFatigueUiState.Loaded -> uiState.recovering.size
+        else -> 0
+    }
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), ambientColor = ColorShadow)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0x146C63FF), Color(0x0D4ECDC4)),
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(1000f, 400f)
+                )
+            )
+            .border(1.dp, ColorCardBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(ColorYellowIconBg)
+            ) {
+                Text(text = "⏳", fontSize = 28.sp)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = if (recoveringCount > 0) "$recoveringCount группы" else "--",
+                    color = ColorDarkText,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+                Text(
+                    text = if (recoveringCount > 0) "ещё восстанавливаются" else "Нет данных о восстановлении",
+                    color = ColorMutedText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
+        }
     }
 }
 
@@ -123,55 +192,12 @@ private fun ScreenHeader() {
 }
 
 @Composable
-private fun SummaryCard(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), ambientColor = ColorShadow)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0x146C63FF), Color(0x0D4ECDC4)),
-                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    end = androidx.compose.ui.geometry.Offset(1000f, 400f)
-                )
-            )
-            .border(1.dp, ColorCardBorder, RoundedCornerShape(16.dp))
-            .padding(16.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(ColorYellowIconBg)
-            ) {
-                Text(text = "⏳", fontSize = 28.sp)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = "4 группы",
-                    color = ColorDarkText,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-                Text(
-                    text = "ещё восстанавливаются",
-                    color = ColorMutedText,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                )
-            }
-        }
+private fun MuscleListCard(modifier: Modifier = Modifier, uiState: MuscleFatigueUiState) {
+    val muscles = when (uiState) {
+        is MuscleFatigueUiState.Loaded -> uiState.recovering
+        else -> emptyList()
     }
-}
-
-@Composable
-private fun MuscleListCard(modifier: Modifier = Modifier) {
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -182,15 +208,30 @@ private fun MuscleListCard(modifier: Modifier = Modifier) {
             .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        recoveringMuscles.forEachIndexed { index, muscle ->
-            MuscleRow(muscle)
-            if (index < recoveringMuscles.lastIndex) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(Color(0x0A000000))
+        if (muscles.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "--",
+                    color = ColorMutedText,
+                    fontSize = 16.sp
                 )
+            }
+        } else {
+            muscles.forEachIndexed { index, muscle ->
+                MuscleRow(muscle)
+                if (index < muscles.lastIndex) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(Color(0x0A000000))
+                    )
+                }
             }
         }
     }
@@ -277,7 +318,7 @@ private fun RecoveryProgressBar(percent: Int, barColor: Color) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun FullyRecoveredSection(modifier: Modifier = Modifier) {
     Column(
@@ -297,14 +338,12 @@ private fun FullyRecoveredSection(modifier: Modifier = Modifier) {
                 letterSpacing = 0.5.sp,
             )
         }
-        FlowRow(
+        androidx.compose.foundation.layout.FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            fullyRecoveredMuscles.forEach { name ->
-                RecoveredChip(name)
-            }
+            Text("--", color = ColorMutedText, fontSize = 13.sp)
         }
     }
 }

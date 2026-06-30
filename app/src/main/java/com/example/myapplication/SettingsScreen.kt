@@ -21,13 +21,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.data.Language
 import com.example.myapplication.data.LocalPreferencesManager
 import com.example.myapplication.data.PreferencesManager
 import com.example.myapplication.data.ThemeMode
 import kotlinx.coroutines.launch
 
-// Design tokens — consistent with ProfileScreen
 private val ColorPrimary = Color(0xFF6C63FF)
 private val ColorPrimaryLight = Color(0x266C63FF)
 private val ColorViolet = Color(0xFF8B5CF6)
@@ -47,22 +48,25 @@ fun SettingsScreen(
     onBackClick: () -> Unit = {}
 ) {
     val preferencesManager = LocalPreferencesManager.current
+    val profileViewModel: UserProfileViewModel = viewModel()
+    val profileState by profileViewModel.state.collectAsStateWithLifecycle()
+    
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    // Collect all settings state
-    val themeMode by preferencesManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
-    val notificationsEnabled by preferencesManager.notificationsEnabled.collectAsState(initial = true)
-    val workoutReminders by preferencesManager.workoutReminders.collectAsState(initial = true)
-    val weeklyReport by preferencesManager.weeklyReport.collectAsState(initial = false)
-    val userName by preferencesManager.userName.collectAsState(initial = "Amir Seitkali")
-    val userEmail by preferencesManager.userEmail.collectAsState(initial = "student1@smartpe.edu")
-    val currentLanguage by preferencesManager.language.collectAsState(initial = Language.RU)
-    val healthConnected by preferencesManager.healthConnectEnabled.collectAsState(initial = false)
+    val notificationsEnabled by preferencesManager.notificationsEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val workoutReminders by preferencesManager.workoutReminders.collectAsStateWithLifecycle(initialValue = true)
+    val weeklyReport by preferencesManager.weeklyReport.collectAsStateWithLifecycle(initialValue = false)
+    val currentLanguage by preferencesManager.language.collectAsStateWithLifecycle(initialValue = Language.RU)
+    val healthConnected by preferencesManager.healthConnectEnabled.collectAsStateWithLifecycle(initialValue = false)
 
-    // Local editable state
-    var editedName by remember(userName) { mutableStateOf(userName) }
-    var editedEmail by remember(userEmail) { mutableStateOf(userEmail) }
+    val userName by preferencesManager.userName.collectAsStateWithLifecycle(initialValue = "")
+    val userEmailPref by preferencesManager.userEmail.collectAsStateWithLifecycle(initialValue = "")
+    
+    val displayName = (profileState as? ProfileUiState.Loaded)?.profile?.name ?: userName
+    val displayEmail = (profileState as? ProfileUiState.Loaded)?.profile?.email ?: userEmailPref
+
+    var editedName by remember(displayName) { mutableStateOf(displayName) }
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     Box(
@@ -75,7 +79,6 @@ fun SettingsScreen(
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar
             SettingsTopBar(onBackClick = onBackClick)
 
             Column(
@@ -84,24 +87,21 @@ fun SettingsScreen(
                     .verticalScroll(scrollState)
                     .padding(bottom = 32.dp)
             ) {
-                // 1. ПРОФИЛЬ
                 SettingsSectionTitle("ПРОФИЛЬ")
                 ProfileSettingsCard(
                     name = editedName,
-                    email = editedEmail,
+                    email = displayEmail,
                     onNameChange = { editedName = it },
-                    onEmailChange = { editedEmail = it },
                     onSave = {
                         scope.launch {
                             preferencesManager.setUserName(editedName)
-                            preferencesManager.setUserEmail(editedEmail)
+                            profileViewModel.updateField("name", editedName)
                         }
                     }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 2. УВЕДОМЛЕНИЯ
                 SettingsSectionTitle("УВЕДОМЛЕНИЯ")
                 NotificationsSettingsCard(
                     notificationsEnabled = notificationsEnabled,
@@ -120,7 +120,6 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 3. ЗДОРОВЬЕ
                 SettingsSectionTitle("ЗДОРОВЬЕ")
                 HealthSettingsCard(
                     isConnected = healthConnected,
@@ -133,10 +132,9 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 4. ВНЕШНИЙ ВИД
                 SettingsSectionTitle("ВНЕШНИЙ ВИД")
                 ThemeSettingsCard(
-                    currentTheme = themeMode,
+                    currentTheme = ThemeMode.SYSTEM,
                     onThemeSelected = {
                         scope.launch { preferencesManager.setThemeMode(it) }
                     }
@@ -144,7 +142,6 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 5. ЯЗЫК
                 SettingsSectionTitle("ЯЗЫК")
                 LanguageSettingsCard(
                     currentLanguage = currentLanguage,
@@ -154,7 +151,6 @@ fun SettingsScreen(
         }
     }
 
-    // Language change confirmation dialog
     if (showLanguageDialog) {
         LanguageConfirmDialog(
             currentLanguage = currentLanguage,
@@ -168,8 +164,6 @@ fun SettingsScreen(
         )
     }
 }
-
-// ─── Top Bar ───────────────────────────────────────────────
 
 @Composable
 private fun SettingsTopBar(onBackClick: () -> Unit) {
@@ -196,8 +190,6 @@ private fun SettingsTopBar(onBackClick: () -> Unit) {
     }
 }
 
-// ─── Section Title ─────────────────────────────────────────
-
 @Composable
 private fun SettingsSectionTitle(text: String) {
     Text(
@@ -210,14 +202,11 @@ private fun SettingsSectionTitle(text: String) {
     )
 }
 
-// ─── 1. Profile Settings ───────────────────────────────────
-
 @Composable
 private fun ProfileSettingsCard(
     name: String,
     email: String,
     onNameChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
     onSave: () -> Unit
 ) {
     Card(
@@ -240,14 +229,15 @@ private fun ProfileSettingsCard(
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = email,
-                onValueChange = onEmailChange,
+                onValueChange = {},
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
-                )
+                ),
+                enabled = false
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
@@ -267,8 +257,6 @@ private fun ProfileSettingsCard(
         }
     }
 }
-
-// ─── 2. Notifications Settings ──────────────────────────────
 
 @Composable
 private fun NotificationsSettingsCard(
@@ -317,8 +305,6 @@ private fun NotificationsSettingsCard(
     }
 }
 
-// ─── 3. Health Settings ─────────────────────────────────────
-
 @Composable
 private fun HealthSettingsCard(
     isConnected: Boolean,
@@ -335,7 +321,7 @@ private fun HealthSettingsCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onConnectClick)
+                .clickable { onConnectClick() }
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -370,8 +356,6 @@ private fun HealthSettingsCard(
         }
     }
 }
-
-// ─── 4. Theme Settings ──────────────────────────────────────
 
 @Composable
 private fun ThemeSettingsCard(
@@ -423,7 +407,7 @@ private fun ThemeOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable { onClick() }
             .padding(vertical = 12.dp, horizontal = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -442,8 +426,6 @@ private fun ThemeOption(
     }
 }
 
-// ─── 5. Language Settings ───────────────────────────────────
-
 @Composable
 private fun LanguageSettingsCard(
     currentLanguage: Language,
@@ -453,7 +435,7 @@ private fun LanguageSettingsCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable(onClick = onLanguageClick),
+            .clickable { onLanguageClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ColorSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -480,8 +462,6 @@ private fun LanguageSettingsCard(
         }
     }
 }
-
-// ─── Language Confirmation Dialog ───────────────────────────
 
 @Composable
 private fun LanguageConfirmDialog(
@@ -544,8 +524,6 @@ private fun LanguageConfirmDialog(
         }
     )
 }
-
-// ─── Reusable Toggle Row ────────────────────────────────────
 
 @Composable
 private fun SettingsToggleRow(

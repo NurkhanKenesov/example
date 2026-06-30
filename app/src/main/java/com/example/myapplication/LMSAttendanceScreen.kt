@@ -53,15 +53,15 @@ fun LMSAttendanceScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AttendanceTopBar(onBack = onBackClick)
-                Spacer(modifier = Modifier.height(8.dp))
-                QrCheckInButton(onClick = onNavigateToQRScanner)
-                Spacer(modifier = Modifier.height(24.dp))
-                AttendanceJournalSection()
-                Spacer(modifier = Modifier.height(20.dp))
-                NormativesSection()
-                Spacer(modifier = Modifier.height(20.dp))
-                TheoryTestsSection(onTestClick = onNavigateToTheory)
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            QrCheckInButton(onClick = onNavigateToQRScanner)
+            Spacer(modifier = Modifier.height(24.dp))
+            AttendanceJournalSection()
+            Spacer(modifier = Modifier.height(20.dp))
+            NormativesSection()
+            Spacer(modifier = Modifier.height(20.dp))
+            TheoryTestsSection(onTestClick = onNavigateToTheory)
+        }
     }
 }
 
@@ -160,28 +160,26 @@ private fun AttendanceJournalSection() {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "12 / 16",
+                    text = "--",
                     color = ColorDark,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { 12f / 16f },
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = ColorGreen,
-                trackColor = ColorGreen.copy(alpha = 0.15f)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(ColorGreen.copy(alpha = 0.15f))
             )
             Spacer(modifier = Modifier.height(12.dp))
-            AttendanceRow(date = "10 Октября, Вт", status = "Присутствовал", statusColor = ColorGreen)
-            Spacer(modifier = Modifier.height(8.dp))
-            AttendanceRow(date = "08 Октября, Вс", status = "Тренировка ИИ", statusColor = ColorPurple)
-            Spacer(modifier = Modifier.height(8.dp))
-            AttendanceRow(date = "03 Октября, Вт", status = "Пропуск", statusColor = ColorRed)
+            Text(
+                text = "Данные о посещаемости в разработке",
+                color = ColorDark.copy(alpha = 0.5f),
+                fontSize = 13.sp
+            )
         }
     }
 }
@@ -211,23 +209,10 @@ private fun NormativesSection() {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            NormativeRow(
-                title = "Бег 3 км",
-                deadline = "Дедлайн: 15 Ноября",
-                badgeText = "Ожидает",
-                badgeTextColor = ColorYellow,
-                badgeBgColor = ColorYellow.copy(alpha = 0.15f)
-            )
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                color = ColorDark.copy(alpha = 0.07f)
-            )
-            NormativeRow(
-                title = "Подтягивания",
-                deadline = "Дедлайн: 1 Декабря",
-                badgeText = "Сдано (15)",
-                badgeTextColor = ColorGreen,
-                badgeBgColor = ColorGreen.copy(alpha = 0.15f)
+            Text(
+                text = "--",
+                color = ColorDark.copy(alpha = 0.5f),
+                fontSize = 14.sp
             )
         }
     }
@@ -312,7 +297,6 @@ private fun TheoryTestsSection(onTestClick: () -> Unit = {}) {
         }
     }
 }
-
 
 
 @Preview(showBackground = true, showSystemUi = true)

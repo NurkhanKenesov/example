@@ -26,3 +26,6 @@ import kotlinx.serialization.Serializable
     val score: Int = 0,
     val total: Int = 8
 )
+@Serializable data object AiChatRoute
+@Serializable data object WorkoutRoute
+@Serializable data object LeaderboardRoute
