@@ -1,7 +1,9 @@
 package com.example.myapplication
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 
@@ -23,7 +25,7 @@ data class Injury(
             severity = map["severity"] as? String ?: "medium"
         )
     }
-    
+
     fun toMap(): Map<String, Any?> = mapOf(
         "type" to type,
         "bodyPart" to bodyPart,
@@ -33,13 +35,20 @@ data class Injury(
     )
 }
 
-class InjuryRepository {
-    private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
-    
+interface InjuryRepository {
+    suspend fun saveInjury(injury: Injury): Result<Unit>
+    suspend fun getInjuries(): Result<List<Injury>>
+    suspend fun deleteInjury(injuryId: String): Result<Unit>
+}
+
+class InjuryRepositoryImpl(
+    private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore
+) : InjuryRepository {
+
     private fun getUserId(): String = auth.currentUser?.uid ?: ""
-    
-    suspend fun saveInjury(injury: Injury): Result<Unit> = try {
+
+    override suspend fun saveInjury(injury: Injury): Result<Unit> = try {
         val docRef = if (injury.id.isBlank()) {
             db.collection("users").document(getUserId()).collection("injuries").document()
         } else {
@@ -47,31 +56,41 @@ class InjuryRepository {
         }
         docRef.set(injury.toMap()).await()
         Result.success(Unit)
+    } catch (e: FirebaseAuthException) {
+        Result.failure(DataError.Auth(e))
+    } catch (e: FirebaseFirestoreException) {
+        Result.failure(DataError.Network(e))
     } catch (e: Exception) {
-        Result.failure(e)
+        Result.failure(DataError.Unknown(e))
     }
-    
-    suspend fun getInjuries(): Result<List<Injury>> = try {
+
+    override suspend fun getInjuries(): Result<List<Injury>> = try {
         val snapshot = db.collection("users").document(getUserId())
             .collection("injuries")
             .get()
             .await()
-        val injuries = snapshot.documents.map { 
-            Injury.fromMap(it.id, it.data ?: emptyMap()) 
+        val injuries = snapshot.documents.map {
+            Injury.fromMap(it.id, it.data ?: emptyMap())
         }
         Result.success(injuries)
+    } catch (e: FirebaseFirestoreException) {
+        Result.failure(DataError.Network(e))
     } catch (e: Exception) {
-        Result.failure(e)
+        Result.failure(DataError.Unknown(e))
     }
-    
-    suspend fun deleteInjury(injuryId: String): Result<Unit> = try {
+
+    override suspend fun deleteInjury(injuryId: String): Result<Unit> = try {
         db.collection("users").document(getUserId())
             .collection("injuries")
             .document(injuryId)
             .delete()
             .await()
         Result.success(Unit)
+    } catch (e: FirebaseAuthException) {
+        Result.failure(DataError.Auth(e))
+    } catch (e: FirebaseFirestoreException) {
+        Result.failure(DataError.Network(e))
     } catch (e: Exception) {
-        Result.failure(e)
+        Result.failure(DataError.Unknown(e))
     }
 }

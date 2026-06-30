@@ -24,7 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 private val ColorPrimary = Color(0xFF6C63FF)
 private val ColorDarkText = Color(0xFF0F0F23)
@@ -54,8 +56,9 @@ sealed interface MuscleFatigueUiState {
     data class Error(val message: String) : MuscleFatigueUiState
 }
 
-class MuscleFatigueViewModel : androidx.lifecycle.ViewModel() {
-    private val repository = InjuryRepository()
+class MuscleFatigueViewModel(
+    private val repository: InjuryRepository
+) : ViewModel() {
     
     var uiState by mutableStateOf<MuscleFatigueUiState>(MuscleFatigueUiState.Loading)
         private set
@@ -68,7 +71,7 @@ class MuscleFatigueViewModel : androidx.lifecycle.ViewModel() {
 
 @Composable
 fun MuscleFatigueScreen(onBackClick: () -> Unit = {}) {
-    val viewModel: MuscleFatigueViewModel = viewModel()
+    val viewModel: MuscleFatigueViewModel = koinViewModel()
     val uiState = viewModel.uiState
 
     LaunchedEffect(Unit) {

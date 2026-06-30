@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 private val Purple       = Color(0xFF6C63FF)
 private val Violet       = Color(0xFF8B5CF6)
@@ -36,7 +37,7 @@ private val ToggleBg     = Color(0xFFF0F0F8)
 @Composable
 fun ProfileSetupScreen(
     onSetupComplete: () -> Unit,
-    viewModel: UserProfileViewModel = viewModel()
+    viewModel: UserProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()

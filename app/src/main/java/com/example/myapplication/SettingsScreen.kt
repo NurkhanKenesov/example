@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import com.example.myapplication.data.Language
 import com.example.myapplication.data.LocalPreferencesManager
 import com.example.myapplication.data.PreferencesManager
@@ -48,7 +49,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit = {}
 ) {
     val preferencesManager = LocalPreferencesManager.current
-    val profileViewModel: UserProfileViewModel = viewModel()
+    val profileViewModel: UserProfileViewModel = koinViewModel()
     val profileState by profileViewModel.state.collectAsStateWithLifecycle()
     
     val scope = rememberCoroutineScope()

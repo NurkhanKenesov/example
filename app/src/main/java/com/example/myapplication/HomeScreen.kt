@@ -32,6 +32,7 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 private val ColorPrimary = Color(0xFF6C63FF)
 private val ColorSecondary = Color(0xFF8B5CF6)
@@ -72,7 +73,7 @@ fun HomeScreen(
     onNavigateToLMSAttendance: () -> Unit = {},
     onNavigateToQRScanner: () -> Unit = {},
     onNavigateToAchievements: () -> Unit = {},
-    viewModel: UserProfileViewModel = viewModel()
+    viewModel: UserProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current

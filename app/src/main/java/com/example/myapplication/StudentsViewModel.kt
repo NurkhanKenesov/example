@@ -2,13 +2,10 @@ package com.example.myapplication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 data class Student(
     val id: String = "",
@@ -36,9 +33,10 @@ sealed interface StudentsUiState {
     data class Error(val message: String) : StudentsUiState
 }
 
-class StudentsViewModel : ViewModel() {
-    private val repository = StudentRepository()
-    
+class StudentsViewModel(
+    private val repository: StudentRepository
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow<StudentsUiState>(StudentsUiState.Loading)
     val uiState: StateFlow<StudentsUiState> = _uiState.asStateFlow()
 
@@ -58,22 +56,5 @@ class StudentsViewModel : ViewModel() {
                 }
             )
         }
-    }
-}
-
-class StudentRepository {
-    private val db = FirebaseFirestore.getInstance()
-    
-    suspend fun getStudents(): Result<List<Student>> = try {
-        val snapshot = db.collection("users")
-            .whereEqualTo("role", "student")
-            .get()
-            .await()
-        val students = snapshot.documents.map { 
-            Student.fromMap(it.id, it.data ?: emptyMap()) 
-        }
-        Result.success(students)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 }

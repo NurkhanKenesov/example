@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,8 +23,8 @@ import com.example.myapplication.ui.ProfileScreen
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel = viewModel(),
-    profileViewModel: UserProfileViewModel = viewModel()
+    authViewModel: AuthViewModel = koinViewModel(),
+    profileViewModel: UserProfileViewModel = koinViewModel()
 ) {
     var currentRole by remember { mutableStateOf(UserRole.Student) }
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -122,8 +123,7 @@ val studentRouteMap = mapOf(
                     uiState = loginState,
                     onLoginClick = { email, password -> authViewModel.login(email, password) },
                     onLoginSuccess = {
-                        val email = com.google.firebase.auth.FirebaseAuth.getInstance()
-                            .currentUser?.email.orEmpty()
+                        val email = authViewModel.currentUserEmail
                         currentRole = deriveRoleFromEmail(email)
                         if (profileViewModel.isProfileComplete()) {
                             navController.navigate(HomeRoute) { popUpTo(LoginRoute) { inclusive = true } }

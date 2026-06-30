@@ -13,8 +13,9 @@ sealed interface QuizScoresUiState {
     data class Error(val message: String) : QuizScoresUiState
 }
 
-class QuizScoresViewModel : ViewModel() {
-    private val repository = QuizScoreRepository()
+class QuizScoresViewModel(
+    private val repository: QuizScoreRepository
+) : ViewModel() {
     
     private val _uiState = MutableStateFlow<QuizScoresUiState>(QuizScoresUiState.Loading)
     val uiState: StateFlow<QuizScoresUiState> = _uiState.asStateFlow()
