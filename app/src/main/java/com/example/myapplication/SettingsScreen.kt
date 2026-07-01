@@ -23,11 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import org.koin.androidx.compose.koinViewModel
 import com.example.myapplication.data.Language
 import com.example.myapplication.data.LocalPreferencesManager
 import com.example.myapplication.data.PreferencesManager
 import com.example.myapplication.data.ThemeMode
+import com.example.myapplication.navigation.WelcomeRoute
 import kotlinx.coroutines.launch
 
 private val ColorPrimary = Color(0xFF6C63FF)
@@ -46,6 +48,8 @@ private val ColorDivider = Color(0x110F0F23)
 
 @Composable
 fun SettingsScreen(
+    authViewModel: AuthViewModel,
+    navController: NavHostController,
     onBackClick: () -> Unit = {}
 ) {
     val preferencesManager = LocalPreferencesManager.current
@@ -69,6 +73,7 @@ fun SettingsScreen(
 
     var editedName by remember(displayName) { mutableStateOf(displayName) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var logoutRequested by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -148,6 +153,24 @@ fun SettingsScreen(
                     currentLanguage = currentLanguage,
                     onLanguageClick = { showLanguageDialog = true }
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        authViewModel.resetLogoutState()
+                        authViewModel.logout()
+                        logoutRequested = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Выйти из аккаунта", fontSize = 16.sp, color = Color.White)
+                }
             }
         }
     }
@@ -163,6 +186,16 @@ fun SettingsScreen(
                 showLanguageDialog = false
             }
         )
+    }
+
+    LaunchedEffect(logoutRequested) {
+        if (logoutRequested) {
+            authViewModel.logoutComplete.collect { completed ->
+                if (completed) {
+                    navController.navigate(WelcomeRoute) { popUpTo(0) { inclusive = true } }
+                }
+            }
+        }
     }
 }
 

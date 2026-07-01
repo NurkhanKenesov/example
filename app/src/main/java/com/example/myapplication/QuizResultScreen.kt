@@ -179,9 +179,6 @@ fun QuizResultScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = ColorPrimary
-                ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = Brush.horizontalGradient(listOf(ColorPrimary, ColorPrimary))
                 )
             ) {
                 Text(

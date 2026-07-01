@@ -32,12 +32,20 @@ fun AppNavHost(
 
     val loginState    by authViewModel.loginState.collectAsStateWithLifecycle()
     val registerState by authViewModel.registerState.collectAsStateWithLifecycle()
+    val profileState  by profileViewModel.state.collectAsStateWithLifecycle()
 
-    val startDestination: Any = when {
-        !authViewModel.isLoggedIn()           -> WelcomeRoute
-        !profileViewModel.isProfileComplete() -> ProfileSetupRoute
-        else                                  -> HomeRoute
+    LaunchedEffect(profileState) {
+        if (profileState is ProfileUiState.Loaded) {
+            currentRole = when (authViewModel.currentUserRole) {
+                "Teacher" -> UserRole.Teacher
+                else -> UserRole.Student
+            }
+        }
     }
+
+    val startDestination: Any = if (authViewModel.isLoggedIn()) {
+        if (profileViewModel.isProfileComplete()) HomeRoute else ProfileSetupRoute
+    } else WelcomeRoute
 
     val showBottomBar = currentDestination?.hasRoute(HomeRoute::class) == true ||
             currentDestination?.hasRoute(PlansRoute::class) == true ||
@@ -67,16 +75,20 @@ val studentRouteMap = mapOf(
                              "Профиль"  to ProfileRoute
                          )
                     val teacherRouteMap = mapOf(
-                        "Главная"  to HomeRoute,
-                        "Студенты" to StudentsRoute,
-                        "Планы"    to PlansRoute,
-                        "Профиль"  to ProfileRoute
+                        "Главная"    to HomeRoute,
+                        "Студенты"   to StudentsRoute,
+                        "Планы"      to PlansRoute,
+                        "Обучение"   to LMSAttendanceRoute,
+                        "Достижения" to AchievementsRoute,
+                        "Профиль"    to ProfileRoute
                     )
                     val routeMap = if (currentRole == UserRole.Teacher) teacherRouteMap else studentRouteMap
                     val teacherNavItems = listOf(
                         NavItem("🏠", "Главная"),
                         NavItem("👨\u200d🏫", "Студенты"),
                         NavItem("📅", "Планы"),
+                        NavItem("📚", "Обучение"),
+                        NavItem("🏆", "Достижения"),
                         NavItem("👤", "Профиль")
                     )
                     val itemsToShow = if (currentRole == UserRole.Teacher) teacherNavItems else navItems
@@ -123,8 +135,6 @@ val studentRouteMap = mapOf(
                     uiState = loginState,
                     onLoginClick = { email, password -> authViewModel.login(email, password) },
                     onLoginSuccess = {
-                        val email = authViewModel.currentUserEmail
-                        currentRole = deriveRoleFromEmail(email)
                         if (profileViewModel.isProfileComplete()) {
                             navController.navigate(HomeRoute) { popUpTo(LoginRoute) { inclusive = true } }
                         } else {
@@ -137,9 +147,13 @@ val studentRouteMap = mapOf(
                 )
             }
             composable<RegisterRoute> {
+                var selectedRole by remember { mutableStateOf(UserRole.Student) }
                 RegisterScreen(
                     uiState          = registerState,
-                    onRegisterClick  = { email, password, _, _ -> authViewModel.register(email, password) },
+                    onRegisterClick  = { email, password, studentId, role ->
+                        selectedRole = role
+                        authViewModel.register(email, password, role.name)
+                    },
                     onRegisterSuccess = {
                         navController.navigate(ProfileSetupRoute) { popUpTo(RegisterRoute) { inclusive = true } }
                     },
@@ -184,7 +198,8 @@ val studentRouteMap = mapOf(
             composable<PlansRoute> {
                 PlanListScreen(
                     onPlanClick = { navController.navigate(PlanDetailRoute) },
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onGenerateClick = { navController.navigate(AiPlanGeneratorRoute) }
                 )
             }
             composable<PlanDetailRoute> {
@@ -205,7 +220,13 @@ val studentRouteMap = mapOf(
                 val profile = (profileState as? ProfileUiState.Loaded)?.profile ?: UserProfile()
                 WorkoutRecommendationScreen(profile = profile, onBackClick = { navController.popBackStack() })
             }
-            composable<StudentsRoute>      { StudentsScreen(onBackClick = { navController.popBackStack() }) }
+            composable<StudentsRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    StudentsScreen(onBackClick = { navController.popBackStack() })
+                } else {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                }
+            }
             composable<LMSAttendanceRoute> {
                 LMSAttendanceScreen(
                     onBackClick           = { navController.popBackStack() },
@@ -218,8 +239,11 @@ val studentRouteMap = mapOf(
                 onNavigateToLeaderboard = { navController.navigate(LeaderboardRoute) }
             ) }
             composable<LeaderboardRoute> { LeaderboardScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AiPlanGeneratorRoute> {
+                AiPlanGeneratorScreen(onBackClick = { navController.popBackStack() })
+            }
             composable<QRScannerRoute>    { QRScannerScreen(navController = navController) }
-            composable<SettingsRoute>     { SettingsScreen(onBackClick = { navController.popBackStack() }) }
+            composable<SettingsRoute>     { SettingsScreen(authViewModel = authViewModel, navController = navController, onBackClick = { navController.popBackStack() }) }
             composable<TheoryRoute> {
                 TheoryScreen(
                     onStartQuiz = { navController.navigate(QuizRoute) },

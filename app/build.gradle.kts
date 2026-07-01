@@ -54,7 +54,6 @@ dependencies {
 
     // Firebase BOM — управляет версиями всех Firebase библиотек
     implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
-    implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-functions")
     implementation("com.google.firebase:firebase-ai:16.0.0")
@@ -69,6 +68,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
 
+    // Koin DI
+    implementation("io.insert-koin:koin-android:3.5.6")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
+
     // CameraX — required by QRScannerScreen.kt
     implementation("androidx.camera:camera-core:1.3.4")
     implementation("androidx.camera:camera-camera2:1.3.4")
@@ -81,7 +84,11 @@ dependencies {
     }
 
     // DataStore — required by PreferencesManager.kt
-    implementation("androidx.datastore:datastore-preferences:1.1.2")
+    implementation(libs.androidx.datastore.preferences)
+
+    // Coil 3 — image loading
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
 
     // Health Connect — required by HealthConnectManager.kt
     implementation("androidx.health.connect:connect-client:1.1.0-rc01")

@@ -2,7 +2,6 @@ package com.example.myapplication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,8 +15,7 @@ sealed interface PlansUiState {
 }
 
 class PlansViewModel(
-    private val repository: PlanRepository,
-    private val auth: FirebaseAuth
+    private val repository: PlanRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlansUiState>(PlansUiState.Loading)

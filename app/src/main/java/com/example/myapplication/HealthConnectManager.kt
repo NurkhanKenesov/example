@@ -214,6 +214,15 @@ class HealthConnectManager(private val context: Context) {
         }
     }
 
+    private fun estimateCaloriesFromSteps(steps: Int): Int {
+        return (steps * 0.04).toInt()
+    }
+
+    private fun estimateActiveMinutesFromSteps(steps: Int): Int {
+        val estimated = (steps / 100.0).toInt()
+        return minOf(estimated, 180)
+    }
+
     fun readAllMetrics() {
         readHeartRate()
         readSteps()
@@ -228,7 +237,7 @@ class HealthConnectManager(private val context: Context) {
             try {
                 val hasPerm = hasAllPermissions()
                 if (!hasPerm) {
-                    Log.d(TAG, "READ_TOTAL_CALORIES_BURNED permission not granted - skipping read")
+                    Log.d(TAG, "READ_ACTIVE_CALORIES_BURNED permission not granted - skipping read")
                     _todayCalories.value = null
                     return@launch
                 }
@@ -237,18 +246,25 @@ class HealthConnectManager(private val context: Context) {
                 val startOfDay = now.atZone(ZoneId.systemDefault()).toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()
 
                 val request = ReadRecordsRequest(
-                    recordType = TotalCaloriesBurnedRecord::class,
+                    recordType = ActiveCaloriesBurnedRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
                         startTime = startOfDay,
                         endTime = now
                     )
                 )
-                val response = client!!.readRecords<TotalCaloriesBurnedRecord>(request)
-                Log.d(TAG, "TotalCaloriesBurned records count: ${response.records.size}")
+                val response = client!!.readRecords<ActiveCaloriesBurnedRecord>(request)
+                Log.d(TAG, "ActiveCaloriesBurned records count: ${response.records.size}")
 
                 if (response.records.isEmpty()) {
-                    Log.d(TAG, "No calorie records available from Health Connect sources")
-                    _todayCalories.value = null
+                    val stepsToday = _todaySteps.value
+                    if (stepsToday != null && stepsToday > 0) {
+                        val estimated = estimateCaloriesFromSteps(stepsToday)
+                        _todayCalories.value = estimated
+                        Log.d(TAG, "No active calorie records — estimated from steps: $estimated kcal")
+                    } else {
+                        Log.d(TAG, "No active calorie records available from Health Connect sources")
+                        _todayCalories.value = null
+                    }
                 } else {
                     val totalKcal = response.records.sumOf { it.energy.inKilocalories }
                     _todayCalories.value = totalKcal.toInt()
@@ -286,8 +302,15 @@ class HealthConnectManager(private val context: Context) {
                 Log.d(TAG, "ExerciseSession records count: ${response.records.size}")
 
                 if (response.records.isEmpty()) {
-                    Log.d(TAG, "No active minutes records available from Health Connect sources")
-                    _todayActiveMinutes.value = null
+                    val stepsToday = _todaySteps.value
+                    if (stepsToday != null && stepsToday > 0) {
+                        val estimated = estimateActiveMinutesFromSteps(stepsToday)
+                        _todayActiveMinutes.value = estimated
+                        Log.d(TAG, "No active minutes records — estimated from steps: $estimated minutes")
+                    } else {
+                        Log.d(TAG, "No active minutes records available from Health Connect sources")
+                        _todayActiveMinutes.value = null
+                    }
                 } else {
                     var totalMinutes = 0L
                     response.records.forEach { record ->

@@ -2,22 +2,18 @@ package com.example.myapplication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.example.myapplication.data.LocalAuthManager
+import com.example.myapplication.data.LocalUser
+import com.example.myapplication.data.PreferencesManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class AuthViewModel(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val localAuthManager: LocalAuthManager,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
-
-    val currentUserEmail: String
-        get() = auth.currentUser?.email.orEmpty()
 
     private val _loginState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val loginState: StateFlow<AuthUiState> = _loginState.asStateFlow()
@@ -25,57 +21,68 @@ class AuthViewModel(
     private val _registerState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val registerState: StateFlow<AuthUiState> = _registerState.asStateFlow()
 
-    // ── Login ────────────────────────────────────────────────────────────────
+    private val _logoutComplete = MutableStateFlow(false)
+    val logoutComplete: StateFlow<Boolean> = _logoutComplete.asStateFlow()
+
+    private val _currentUser = MutableStateFlow<LocalUser?>(null)
+    val currentUser: StateFlow<LocalUser?> = _currentUser.asStateFlow()
+
+    val currentUserEmail: String
+        get() = _currentUser.value?.email.orEmpty()
+
+    val currentUserRole: String
+        get() = _currentUser.value?.role ?: "Student"
+
+    init {
+        viewModelScope.launch {
+            _currentUser.value = localAuthManager.getCurrentUser()
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _loginState.value = AuthUiState.Loading
-            try {
-                auth.signInWithEmailAndPassword(email.trim(), password).await()
-                _loginState.value = AuthUiState.Success("Вход выполнен")
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                _loginState.value = AuthUiState.Error("Неверный email или пароль")
-            } catch (e: Exception) {
-                _loginState.value = AuthUiState.Error(e.localizedMessage ?: "Ошибка входа")
-            }
+            localAuthManager.login(email, password).fold(
+                onSuccess = { user ->
+                    _currentUser.value = user
+                    _loginState.value = AuthUiState.Success("Вход выполнен")
+                },
+                onFailure = { e ->
+                    _loginState.value = AuthUiState.Error(e.message ?: "Ошибка входа")
+                }
+            )
         }
     }
 
-    fun clearLoginError() {
-        _loginState.value = AuthUiState.Idle
-    }
-
-    // ── Register ──────────────────────────────────────────────────────────────
-
-    fun register(email: String, password: String) {
+    fun register(email: String, password: String, role: String = "Student") {
         viewModelScope.launch {
             _registerState.value = AuthUiState.Loading
-            try {
-                auth.createUserWithEmailAndPassword(email.trim(), password).await()
-                _registerState.value = AuthUiState.Success("Аккаунт создан")
-            } catch (e: FirebaseAuthWeakPasswordException) {
-                _registerState.value = AuthUiState.Error("Пароль слишком слабый")
-            } catch (e: FirebaseAuthUserCollisionException) {
-                _registerState.value = AuthUiState.Error("Этот email уже зарегистрирован")
-            } catch (e: Exception) {
-                _registerState.value = AuthUiState.Error(e.localizedMessage ?: "Ошибка регистрации")
-            }
+            localAuthManager.register(email, password, role).fold(
+                onSuccess = { user ->
+                    _currentUser.value = user
+                    _registerState.value = AuthUiState.Success("Аккаунт создан")
+                },
+                onFailure = { e ->
+                    _registerState.value = AuthUiState.Error(e.message ?: "Ошибка регистрации")
+                }
+            )
         }
     }
 
-    fun clearRegisterError() {
-        _registerState.value = AuthUiState.Idle
-    }
-
-    // ── Logout ────────────────────────────────────────────────────────────────
-
     fun logout() {
-        auth.signOut()
-        _loginState.value = AuthUiState.Idle
-        _registerState.value = AuthUiState.Idle
+        viewModelScope.launch {
+            localAuthManager.logout()
+            _currentUser.value = null
+            _loginState.value = AuthUiState.Idle
+            _registerState.value = AuthUiState.Idle
+            preferencesManager.setUserName("")
+            preferencesManager.setUserEmail("")
+            _logoutComplete.value = true
+        }
     }
 
-    // ── Check current session ─────────────────────────────────────────────────
-
-    fun isLoggedIn(): Boolean = auth.currentUser != null
+    fun resetLogoutState() { _logoutComplete.value = false }
+    fun clearLoginError() { _loginState.value = AuthUiState.Idle }
+    fun clearRegisterError() { _registerState.value = AuthUiState.Idle }
+    fun isLoggedIn(): Boolean = _currentUser.value != null
 }

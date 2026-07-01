@@ -1,7 +1,6 @@
 package com.example.myapplication
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
+import com.example.myapplication.data.LocalAuthManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
@@ -13,11 +12,12 @@ interface UserProfileRepository {
 }
 
 class UserProfileRepositoryImpl(
-    private val auth: FirebaseAuth,
+    private val localAuthManager: LocalAuthManager,
     private val db: FirebaseFirestore
 ) : UserProfileRepository {
 
-    private fun getUserId(): String = auth.currentUser?.uid ?: ""
+    private suspend fun getUserId(): String =
+        localAuthManager.getCurrentUser()?.uid ?: ""
 
     override suspend fun getProfile(): Result<UserProfile?> = try {
         val uid = getUserId()
@@ -28,8 +28,6 @@ class UserProfileRepositoryImpl(
         } else {
             Result.success(null)
         }
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -38,9 +36,11 @@ class UserProfileRepositoryImpl(
 
     override suspend fun saveProfile(profile: UserProfile): Result<Unit> = try {
         val uid = getUserId()
+        val existingProfile = getProfile().getOrNull()
         val finalProfile = profile.copy(
             uid = uid,
-            email = auth.currentUser?.email ?: profile.email,
+            email = localAuthManager.getCurrentUser()?.email ?: profile.email,
+            role = existingProfile?.role ?: profile.role,
             profileComplete = true
         )
         db.collection("users")
@@ -48,8 +48,6 @@ class UserProfileRepositoryImpl(
             .set(finalProfile.toMap())
             .await()
         Result.success(Unit)
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -58,10 +56,8 @@ class UserProfileRepositoryImpl(
 
     override suspend fun updateField(key: String, value: Any): Result<Unit> = try {
         val uid = getUserId()
-        db.collection("users").document(uid).update(key, value).await()
+        db.collection("users").document(uid).set(mapOf(key to value), com.google.firebase.firestore.SetOptions.merge()).await()
         Result.success(Unit)
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {

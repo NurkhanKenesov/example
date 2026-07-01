@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 // ── Data classes ──────────────────────────────────────────────────────────────
 
@@ -143,7 +144,7 @@ fun QuizScreen(
     val currentQuestion = quizQuestions[quizState.currentIndex]
     val selectedAnswer = quizState.selectedAnswers[quizState.currentIndex]
     val progress = (quizState.currentIndex + 1).toFloat() / totalQuestions
-    val quizScoresViewModel: QuizScoresViewModel = viewModel()
+    val quizScoresViewModel: QuizScoresViewModel = koinViewModel()
 
     Box(
         modifier = Modifier
@@ -352,7 +353,7 @@ private fun QuizOption(
             .clip(RoundedCornerShape(12.dp))
             .background(bgColor)
             .border(1.5.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clickable { onClick() }
             .padding(16.dp)
     ) {
         Row(
@@ -383,7 +384,6 @@ private fun QuizOption(
                 lineHeight = 22.sp,
                 modifier = Modifier.weight(1f)
             )
-            // Radio circle indicator
             Box(
                 modifier = Modifier
                     .size(22.dp)

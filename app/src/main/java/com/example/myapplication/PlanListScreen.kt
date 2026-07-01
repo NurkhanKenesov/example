@@ -3,6 +3,8 @@ package com.example.myapplication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
@@ -66,15 +69,16 @@ private val emptyPlans = emptyList<TrainingPlan>()
 @Composable
 fun PlanListScreen(
     onPlanClick: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onGenerateClick: () -> Unit = {}
 ) {
-    val viewModel: PlansViewModel = viewModel()
+    val viewModel: PlansViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    // Map Firestore plans to UI model (placeholder - will show empty state)
-    val plans = when (uiState) {
-        is PlansUiState.Loaded -> emptyPlans
-        else -> emptyPlans
+    val medicalGroup by viewModel.profileMedicalGroup.collectAsStateWithLifecycle()
+    val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+
+    LaunchedEffect(medicalGroup) {
+        viewModel.loadAssignedWorkoutPlan()
     }
 
     Box(
@@ -85,45 +89,184 @@ fun PlanListScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 3.5.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    text = "‹",
-                    color = GradientStart,
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.W800,
-                    modifier = Modifier.clickable { onBackClick() }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 3.5.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "‹",
+                        color = GradientStart,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.W800,
+                        modifier = Modifier.clickable { onBackClick() }
+                    )
+                    Text(
+                        text = "📅 Мои планы",
+                        color = Ebony,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.W800,
+                        lineHeight = 39.1.sp,
+                        modifier = Modifier.paddingFromBaseline(bottom = 15.59.dp),
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                GenerateButton(
+                    onClick = {
+                        onGenerateClick.invoke()
+                    },
+                    isSaving = isSaving
                 )
-                Text(
-                    text = "📅 Мои планы",
-                    color = Ebony,
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.W800,
-                    lineHeight = 39.1.sp,
-                    modifier = Modifier.paddingFromBaseline(bottom = 15.59.dp),
-                )
-                Spacer(modifier = Modifier.width(20.dp))
+
+                Spacer(Modifier.height(8.dp))
+                
+                when (uiState) {
+                    is PlansUiState.WorkoutPlanLoaded -> {
+                        val plan = (uiState as PlansUiState.WorkoutPlanLoaded).plan
+                        PlanHeader(plan = plan)
+                    }
+                    is PlansUiState.Error -> {
+                        val message = (uiState as PlansUiState.Error).message
+                        ErrorState(message = message)
+                    }
+                    PlansUiState.Loading -> {
+                        LoadingState()
+                    }
+                    is PlansUiState.Loaded -> {
+                        EmptyPlansState()
+                    }
+                }
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            GenerateButton()
-
-            Spacer(Modifier.height(8.dp))
             
-            if (plans.isEmpty()) {
-                EmptyPlansState()
+            when (uiState) {
+                is PlansUiState.WorkoutPlanLoaded -> {
+                    val plan = (uiState as PlansUiState.WorkoutPlanLoaded).plan
+                    if (plan.exercises.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(plan.exercises, key = { it.id }) { exercise -> 
+                                ExerciseRow(exercise = exercise)
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun PlanHeader(plan: WorkoutPlan) {
+    Column {
+        Text(
+            text = plan.title,
+            color = Ebony,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W700,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Text(
+            text = plan.description,
+            color = EbonyAlpha40,
+            fontSize = 13.sp,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+    }
+}
+
+@Composable
+private fun LoadingState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "...",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.W700,
+            color = Ebony.copy(alpha = 0.3f)
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Загрузка плана тренировок",
+            fontSize = 16.sp,
+            color = Ebony.copy(alpha = 0.5f)
+        )
+    }
+}
+
+@Composable
+private fun ErrorState(message: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "⚠️",
+            fontSize = 32.sp
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Ошибка: $message",
+            fontSize = 14.sp,
+            color = Red,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ExerciseRow(exercise: WorkoutExercise) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White)
+            .padding(14.dp),
+    ) {
+        Text(
+            text = "${exercise.emoji} ${exercise.name}",
+            color = Ebony,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W600
+        )
+        if (exercise.description.isNotBlank()) {
+            Text(
+                text = exercise.description,
+                color = EbonyAlpha40,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
+        Text(
+            text = "Сеты: ${exercise.sets} • Повт.: ${exercise.reps}",
+            color = EbonyAlpha40,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 
@@ -158,12 +301,13 @@ private fun EmptyPlansState() {
 }
 
 @Composable
-private fun GenerateButton() {
+private fun GenerateButton(onClick: () -> Unit = {}, isSaving: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Brush.linearGradient(listOf(GradientStart, GradientEnd))),
+            .background(Brush.linearGradient(listOf(GradientStart, GradientEnd)))
+            .clickable(enabled = !isSaving) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -173,7 +317,7 @@ private fun GenerateButton() {
         ) {
             Text("✨", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.W700)
             Text(
-                text = "Сгенерировать новый план",
+                text = if (isSaving) "Сохранение..." else "Сгенерировать новый план",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.W700,

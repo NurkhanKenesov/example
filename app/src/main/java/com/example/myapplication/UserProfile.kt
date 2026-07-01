@@ -18,7 +18,7 @@ data class UserProfile(
     val uid: String = "",
     val name: String = "",
     val email: String = "",
-    val role: String = "student",
+    val role: String = "Student",
     val gender: Gender = Gender.MALE,
     val age: Int = 18,
     val heightCm: Int = 170,
@@ -26,7 +26,8 @@ data class UserProfile(
     val medicalGroup: MedicalGroup = MedicalGroup.BASIC,
     val studentId: String = "",
     val groupName: String = "",
-    val profileComplete: Boolean = false
+    val profileComplete: Boolean = false,
+    val photoUrl: String? = null
 ) {
     val initials: String
         get() = name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.joinToString("")
@@ -59,10 +60,11 @@ data class UserProfile(
         "medicalGroup"    to medicalGroup.name,
         "studentId"       to studentId,
         "groupName"       to groupName,
-        "profileComplete" to profileComplete
+        "profileComplete" to profileComplete,
+        "photoUrl"        to (photoUrl ?: "")
     )
 
-    companion object {
+companion object {
         fun fromMap(map: Map<String, Any>): UserProfile = UserProfile(
             uid           = map["uid"] as? String ?: "",
             name          = map["name"] as? String ?: "",
@@ -73,10 +75,11 @@ data class UserProfile(
             heightCm      = (map["heightCm"] as? Long)?.toInt() ?: 170,
             weightKg      = (map["weightKg"] as? Double)?.toFloat() ?: 65f,
             medicalGroup  = MedicalGroup.entries.firstOrNull { it.name == map["medicalGroup"] }
-                            ?: MedicalGroup.BASIC,
+                                ?: MedicalGroup.BASIC,
             studentId     = map["studentId"] as? String ?: "",
             groupName     = map["groupName"] as? String ?: "",
-            profileComplete = map["profileComplete"] as? Boolean ?: false
+            profileComplete = map["profileComplete"] as? Boolean ?: false,
+            photoUrl      = (map["photoUrl"] as? String)?.takeIf { it.isNotEmpty() }
         )
     }
 }

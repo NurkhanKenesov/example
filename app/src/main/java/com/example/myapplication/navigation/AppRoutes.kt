@@ -29,3 +29,4 @@ import kotlinx.serialization.Serializable
 @Serializable data object AiChatRoute
 @Serializable data object WorkoutRoute
 @Serializable data object LeaderboardRoute
+@Serializable data object AiPlanGeneratorRoute

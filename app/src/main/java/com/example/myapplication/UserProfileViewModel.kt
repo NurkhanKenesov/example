@@ -36,7 +36,7 @@ class UserProfileViewModel(
                     if (profile != null) {
                         _state.value = ProfileUiState.Loaded(profile)
                     } else {
-                        _state.value = ProfileUiState.Error("Пользователь не найден")
+                        _state.value = ProfileUiState.Loaded(UserProfile())
                     }
                 },
                 onFailure = { e ->
@@ -69,6 +69,16 @@ class UserProfileViewModel(
                 onSuccess = { loadProfile() },
                 onFailure = { /* silently ignore */ }
             )
+        }
+    }
+
+    fun saveRole(role: UserRole, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            userProfileRepository.updateField("role", role.name).fold(
+                onSuccess = { loadProfile() },
+                onFailure = { /* silently ignore */ }
+            )
+            onComplete()
         }
     }
 

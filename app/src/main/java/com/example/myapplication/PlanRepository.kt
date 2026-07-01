@@ -1,7 +1,6 @@
 package com.example.myapplication
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
+import com.example.myapplication.data.LocalAuthManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
@@ -130,11 +129,12 @@ interface PlanRepository {
 }
 
 class PlanRepositoryImpl(
-    private val auth: FirebaseAuth,
+    private val localAuthManager: LocalAuthManager,
     private val db: FirebaseFirestore
 ) : PlanRepository {
 
-    private fun getUserId(): String = auth.currentUser?.uid ?: ""
+    private suspend fun getUserId(): String =
+        localAuthManager.getCurrentUser()?.uid ?: ""
 
     override suspend fun savePlan(plan: Plan): Result<Unit> = try {
         val docRef = if (plan.id.isBlank()) {
@@ -144,8 +144,6 @@ class PlanRepositoryImpl(
         }
         docRef.set(plan.toMap()).await()
         Result.success(Unit)
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -175,8 +173,6 @@ class PlanRepositoryImpl(
             .update("status", status)
             .await()
         Result.success(Unit)
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -221,8 +217,6 @@ class PlanRepositoryImpl(
         }
         docRef.set(plan.toMap()).await()
         Result.success(Unit)
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -241,8 +235,6 @@ class PlanRepositoryImpl(
             val doc = snapshot.documents[0]
             Result.success(WorkoutPlan.fromMap(doc.id, doc.data ?: emptyMap()))
         }
-    } catch (e: FirebaseAuthException) {
-        Result.failure(DataError.Auth(e))
     } catch (e: FirebaseFirestoreException) {
         Result.failure(DataError.Network(e))
     } catch (e: Exception) {
@@ -317,8 +309,8 @@ class PlanRepositoryImpl(
         }
     }
 
-    private fun isTeacher(): Boolean {
-        val email = auth.currentUser?.email ?: return false
+    private suspend fun isTeacher(): Boolean {
+        val email = localAuthManager.getCurrentUser()?.email ?: return false
         val lower = email.lowercase()
         return lower.contains("teacher") || lower.contains("prof")
     }
