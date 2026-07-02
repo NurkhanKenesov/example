@@ -20,15 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import com.example.myapplication.data.models.ChatMessage
 
 private val PurplePrimary = Color(0xFF6C63FF)
 private val PurpleLight = Color(0xFF8B5CF6)
 private val DarkText = Color(0xFF0F0F23)
 private val AvatarGrey = Color(0xFFE0E0EB)
-private val BubbleBackground = Color(0xFFF5F7FF)
 private val InputBackground = Color(0xFFF5F7FF)
 private val GreyHint = Color(0xFF757575)
-private val Divider = Color(0x14000000)
 
 private val ScreenGradient = Brush.verticalGradient(
     colors = listOf(Color(0xFFF0F2FF), Color(0xFFF5F7FF))
@@ -37,37 +37,24 @@ private val BotAvatarGradient = Brush.linearGradient(
     colors = listOf(PurplePrimary, PurpleLight)
 )
 
-sealed class ChatMessage {
-    data class Bot(val paragraphs: List<String>) : ChatMessage()
-    data class User(val text: String, val initials: String) : ChatMessage()
-}
-
-private val sampleMessages = listOf(
-    ChatMessage.Bot(listOf("Привет! Я твой виртуальный тренер. Чем могу помочь?")),
-    ChatMessage.User(
-        text = "У меня болит колено после вчерашнего бега. Чем заменить приседания сегодня?",
-        initials = "AS"
-    ),
-    ChatMessage.Bot(
-        listOf(
-            "Рекомендую исключить осевую нагрузку на колени. Давай заменим приседания на «Ягодичный мостик» и «Отведение ноги назад». Я уже обновил твой план тренировки.",
-            "Если боль не пройдет через 2 дня, обязательно сообщи преподавателю!"
-        )
-    )
-)
+private val SYSTEM_PROMPT = "Ты помощник по физкультуре для школьников. Отвечай коротко, по-русски."
 
 @Composable
-fun AIChatbotScreen(onBackClick: () -> Unit = {}) {
+fun AiChatScreen(onBackClick: () -> Unit = {}) {
     var inputText by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf(*sampleMessages.toTypedArray()) }
+    var messages by remember {
+        mutableStateOf<List<ChatMessage>>(listOf(ChatMessage.Bot(listOf("Привет! Я твой виртуальный тренер. Чем могу помочь?"))))
+    }
+    var isLoading by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ScreenGradient)
     ) {
-        ChatNavBar(onBack = onBackClick)
+        ChatNavBar(onBackClick = onBackClick, isLoading = isLoading)
 
         LazyColumn(
             state = listState,
@@ -90,16 +77,30 @@ fun AIChatbotScreen(onBackClick: () -> Unit = {}) {
             onTextChange = { inputText = it },
             onSend = {
                 if (inputText.isNotBlank()) {
-                    messages.add(ChatMessage.User(inputText.trim(), "AS"))
+                    val userMessage = inputText.trim()
+                    messages = messages + ChatMessage.User(userMessage, "AS")
                     inputText = ""
+                    isLoading = true
+
+                    coroutineScope.launch {
+                        GeminiRepository.sendMessage(userMessage)
+                            .onSuccess { response ->
+                                messages = messages + ChatMessage.Bot(listOf(response))
+                            }
+                            .onFailure { e ->
+                                messages = messages + ChatMessage.Bot(listOf("Ошибка: ${e.message ?: "Неизвестная ошибка"}"))
+                            }
+                        isLoading = false
+                    }
                 }
-            }
+            },
+            enabled = !isLoading
         )
     }
 }
 
 @Composable
-private fun ChatNavBar(onBackClick: () -> Unit) {
+private fun ChatNavBar(onBackClick: () -> Unit, isLoading: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,7 +126,12 @@ private fun ChatNavBar(onBackClick: () -> Unit) {
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.weight(1f))
-        // Balance spacer to keep title centered
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = PurplePrimary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(72.dp))
     }
 }
@@ -240,7 +246,8 @@ private fun UserBubble(text: String) {
 private fun MessageInputBar(
     text: String,
     onTextChange: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -271,17 +278,18 @@ private fun MessageInputBar(
                 disabledIndicatorColor = Color.Transparent
             ),
             singleLine = false,
-            maxLines = 4
+            maxLines = 4,
+            enabled = enabled
         )
 
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(PurplePrimary),
+                .background(if (enabled) PurplePrimary else PurplePrimary.copy(alpha = 0.5f)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = onSend, modifier = Modifier.size(40.dp)) {
+            IconButton(onClick = onSend, modifier = Modifier.size(40.dp), enabled = enabled) {
                 Icon(
                     imageVector = Icons.Filled.ArrowUpward,
                     contentDescription = "Отправить",
@@ -295,6 +303,6 @@ private fun MessageInputBar(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun AIChatbotScreenPreview() {
-    AIChatbotScreen()
+fun AiChatScreenPreview() {
+    AiChatScreen()
 }

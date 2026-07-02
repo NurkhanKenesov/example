@@ -1,168 +1,242 @@
 package com.example.myapplication
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-private val ScannerGreen = Color(0xFF4CD964)
-private val ScannerFrameSize = 260.dp
-private val ScannerCornerRadius = 20.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavHostController
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import org.koin.androidx.compose.koinViewModel
+import java.util.concurrent.Executors
 
 @Composable
-fun QRScannerScreen(onBackClick: () -> Unit = {}) {
-    val scanLineTransition = rememberInfiniteTransition(label = "scanLine")
-    val scanLineProgress by scanLineTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scanLineProgress"
-    )
+fun QRScannerScreen(
+    navController: NavHostController,
+    onCheckInSuccess: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val attendanceViewModel: AttendanceViewModel = koinViewModel()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        // Top navigation bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier
-                    .clickable(onClick = onBackClick)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
-                    contentDescription = "Назад",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = "Назад",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Normal
-                )
-            }
+    var hasCameraPermission by remember { mutableStateOf(false) }
+    var scannedResult by remember { mutableStateOf<String?>(null) }
+    var isScanning by remember { mutableStateOf(true) }
+    var checkInMessage by remember { mutableStateOf<String?>(null) }
+    var isCheckInSuccess by remember { mutableStateOf<Boolean?>(null) }
 
-            Text(
-                text = "Отметка на паре",
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
 
-            // Spacer to balance the back button visually
-            Spacer(modifier = Modifier.size(72.dp))
-        }
-
-        // Scanner frame with animated scan line
-        Box(
-            modifier = Modifier.align(Alignment.Center),
-            contentAlignment = Alignment.Center
-        ) {
-            Canvas(modifier = Modifier.size(ScannerFrameSize)) {
-                val frameSize = size
-                val strokeWidth = 3.dp.toPx()
-                val cornerRadius = ScannerCornerRadius.toPx()
-
-                // Dimmed overlay outside the scanner frame is handled by the dark background.
-                // Draw the green rounded rectangle border
-                drawRoundRect(
-                    color = ScannerGreen,
-                    topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
-                    size = Size(frameSize.width - strokeWidth, frameSize.height - strokeWidth),
-                    cornerRadius = CornerRadius(cornerRadius, cornerRadius),
-                    style = Stroke(width = strokeWidth)
-                )
-
-                // Animated horizontal scan line inside the frame
-                val padding = strokeWidth * 2
-                val lineY = padding + (frameSize.height - padding * 2) * scanLineProgress
-                drawLine(
-                    color = ScannerGreen.copy(alpha = 0.85f),
-                    start = Offset(padding + cornerRadius * 0.5f, lineY),
-                    end = Offset(frameSize.width - padding - cornerRadius * 0.5f, lineY),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-        }
-
-        // Bottom instruction text
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 32.dp)
-                .padding(bottom = 80.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Наведите камеру на QR-код",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Код генерируется в приложении преподавателя",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Center
-            )
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) 
+            == PackageManager.PERMISSION_GRANTED) {
+            hasCameraPermission = true
+        } else {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun QRScannerScreenPreview() {
-    QRScannerScreen()
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Кнопка назад
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.TopStart)
+        ) {
+            androidx.compose.material3.TextButton(onClick = { navController.popBackStack() }) {
+                androidx.compose.material3.Text(
+                    text = "‹ Назад",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+        if (hasCameraPermission) {
+            AndroidView(
+                factory = { ctx ->
+                    val previewView = PreviewView(ctx).apply {
+                        scaleType = PreviewView.ScaleType.FILL_CENTER
+                    }
+
+                    val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+
+                    cameraProviderFuture.addListener({
+                        val cameraProvider = cameraProviderFuture.get()
+
+                        val preview = Preview.Builder().build().also {
+                            it.setSurfaceProvider(previewView.surfaceProvider)
+                        }
+
+                        // ML Kit Barcode Scanner
+                        val options = BarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                            .build()
+                        val barcodeScanner = BarcodeScanning.getClient(options)
+
+                        val imageAnalysis = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build()
+
+                        imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                            if (!isScanning) {
+                                imageProxy.close()
+                                return@setAnalyzer
+                            }
+
+                            // Используем ML Kit Analyzer (рекомендуемый способ)
+                            // Для простоты используем direct ML Kit call на ImageProxy
+                            // Можно улучшить через MlKitAnalyzer из camerax-mlkit
+
+                            val image = imageProxy.image
+                            if (image == null) {
+                                imageProxy.close()
+                                return@setAnalyzer
+                            }
+                            barcodeScanner.process(image, imageProxy.imageInfo.rotationDegrees)
+                                .addOnSuccessListener { barcodes ->
+                                    for (barcode in barcodes) {
+                                        val rawValue = barcode.rawValue
+                                        if (rawValue != null && isScanning) {
+                                            isScanning = false
+                                            scannedResult = rawValue
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                attendanceViewModel.checkIn(rawValue).fold(
+                                                    onSuccess = { record ->
+                                                        checkInMessage = "✅ Вы отмечены как присутствующий"
+                                                        isCheckInSuccess = true
+                                                        onCheckInSuccess()
+                                                    },
+                                                    onFailure = { error ->
+                                                        val errorMsg = when (error.message) {
+                                                            "Not logged in" -> "Ошибка: пользователь не авторизован"
+                                                            "Session not found" -> "Сессия не найдена"
+                                                            else -> "Ошибка отметки: ${error.message}"
+                                                        }
+                                                        checkInMessage = errorMsg
+                                                        isCheckInSuccess = false
+                                                    }
+                                                )
+                                            }
+                                            break
+                                        }
+                                    }
+                                }
+                                .addOnCompleteListener {
+                                    imageProxy.close()
+                                }
+                        }
+
+                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                        try {
+                            cameraProvider.unbindAll()
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageAnalysis
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }, ContextCompat.getMainExecutor(ctx))
+
+                    previewView
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Оверлей с инструкциями
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Наведите камеру на QR-код",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Требуется разрешение на камеру")
+                Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                    Text("Разрешить доступ к камере")
+                }
+            }
+        }
+
+        // Показ результата отметки
+        checkInMessage?.let { message ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                androidx.compose.material3.Card(
+                    modifier = Modifier.padding(16.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = if (isCheckInSuccess == true) Color(0xFFDCFCE7) else Color(0xFFFEF2F2)
+                    )
+                ) {
+                    Text(
+                        text = message,
+                        modifier = Modifier.padding(24.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isCheckInSuccess == true) Color(0xFF166534) else Color(0xFF991B1B)
+                    )
+                }
+            }
+        }
+    }
+
+    // Очистка
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
 }

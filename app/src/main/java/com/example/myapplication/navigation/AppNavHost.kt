@@ -1,0 +1,320 @@
+package com.example.myapplication.navigation
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.toRoute
+import com.example.myapplication.*
+import com.example.myapplication.ui.ProfileScreen
+
+@Composable
+fun AppNavHost(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+    authViewModel: AuthViewModel = koinViewModel(),
+    profileViewModel: UserProfileViewModel = koinViewModel()
+) {
+    var currentRole by remember { mutableStateOf(UserRole.Student) }
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
+
+    val loginState    by authViewModel.loginState.collectAsStateWithLifecycle()
+    val registerState by authViewModel.registerState.collectAsStateWithLifecycle()
+    val profileState  by profileViewModel.state.collectAsStateWithLifecycle()
+    val currentUser   by authViewModel.currentUser.collectAsStateWithLifecycle()
+
+    LaunchedEffect(currentUser) {
+        currentRole = when (currentUser?.role) {
+            "Teacher" -> UserRole.Teacher
+            else -> UserRole.Student
+        }
+    }
+
+    LaunchedEffect(profileState) {
+        if (profileState is ProfileUiState.Loaded) {
+            val profile = (profileState as ProfileUiState.Loaded).profile
+            currentRole = when (profile.role) {
+                "Teacher" -> UserRole.Teacher
+                else -> UserRole.Student
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        authViewModel.refreshCurrentUser()
+    }
+
+    val startDestination: Any = if (authViewModel.isLoggedIn()) {
+        if (profileViewModel.isProfileComplete()) HomeRoute else ProfileSetupRoute
+    } else WelcomeRoute
+
+val showBottomBar = currentDestination?.hasRoute(HomeRoute::class) == true ||
+         currentDestination?.hasRoute(PlansRoute::class) == true ||
+         currentDestination?.hasRoute(PlanDetailRoute::class) == true ||
+         currentDestination?.hasRoute(LMSAttendanceRoute::class) == true ||
+         currentDestination?.hasRoute(AchievementsRoute::class) == true ||
+         currentDestination?.hasRoute(ProfileRoute::class) == true ||
+         currentDestination?.hasRoute(StudentsRoute::class) == true ||
+         currentDestination?.hasRoute(ModelRoute::class) == true ||
+         currentDestination?.hasRoute(AiChatRoute::class) == true ||
+         currentDestination?.hasRoute(WorkoutRoute::class) == true ||
+         currentDestination?.hasRoute(LeaderboardRoute::class) == true
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
+val studentRouteMap = mapOf(
+                         "Главная"  to HomeRoute,
+                         "ИИ"       to AiChatRoute,
+                         "Планы"    to PlansRoute,
+                           "Обучение" to LMSAttendanceRoute,
+                             "Рейтинг"  to LeaderboardRoute,
+                             "Достижения"  to AchievementsRoute,
+                             "Профиль"  to ProfileRoute
+                         )
+                    val teacherRouteMap = mapOf(
+                        "Главная"    to HomeRoute,
+                        "Студенты"   to StudentsRoute,
+                        "Планы"      to PlansRoute,
+                        "Модель"     to ModelRoute,
+                        "Профиль"    to ProfileRoute
+                    )
+                    val routeMap = if (currentRole == UserRole.Teacher) teacherRouteMap else studentRouteMap
+                    val teacherNavItems = listOf(
+                        NavItem("🏠", "Главная"),
+                        NavItem("👨\u200d🏫", "Студенты"),
+                        NavItem("📅", "Планы"),
+                        NavItem("🤖", "Модель"),
+                        NavItem("👤", "Профиль")
+                    )
+                    val itemsToShow = if (currentRole == UserRole.Teacher) teacherNavItems else navItems
+
+itemsToShow.forEach { item ->
+
+                         val route = routeMap[item.label] ?: HomeRoute
+                         val isSelected = currentDestination?.hasRoute(route::class) == true
+                         NavigationBarItem(
+                             selected = isSelected,
+                             onClick = {
+                                 if (!isSelected) {
+                                     if (route == HomeRoute) {
+                                         navController.popBackStack(HomeRoute, inclusive = false)
+                                     } else {
+                                         navController.popBackStack<EditProfileRoute>(inclusive = true)
+                                         navController.navigate(route) {
+                                             popUpTo(HomeRoute) { inclusive = false }
+                                             launchSingleTop = true
+                                             restoreState = true
+                                         }
+                                     }
+                                 }
+                             },
+                            icon  = { Text(text = item.icon, fontSize = 20.sp) },
+                            label = { Text(text = item.label, fontSize = 10.sp) }
+                        )
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = modifier.padding(innerPadding)
+        ) {
+            composable<WelcomeRoute> {
+                WelcomeScreen(
+                    onSignIn = { navController.navigate(LoginRoute) },
+                    onCreateAccount = { navController.navigate(RegisterRoute) }
+                )
+            }
+            composable<LoginRoute> {
+                LoginScreen(
+                    uiState = loginState,
+                    onLoginClick = { email, password -> authViewModel.login(email, password) },
+                    onLoginSuccess = {
+                        if (profileViewModel.isProfileComplete()) {
+                            navController.navigate(HomeRoute) { popUpTo(LoginRoute) { inclusive = true } }
+                        } else {
+                            navController.navigate(ProfileSetupRoute) { popUpTo(LoginRoute) { inclusive = true } }
+                        }
+                    },
+                    onErrorDismiss   = authViewModel::clearLoginError,
+                    onBackClick      = { navController.popBackStack() },
+                    onForgotPassword = { }
+                )
+            }
+            composable<RegisterRoute> {
+                var selectedRole by remember { mutableStateOf(UserRole.Student) }
+                RegisterScreen(
+                    uiState          = registerState,
+                    onRegisterClick  = { email, password, studentId, role ->
+                        selectedRole = role
+                        val name = email.substringBefore("@").replaceFirstChar { it.uppercase() }
+                        authViewModel.register(email, password, role.name, name)
+                    },
+                    onRegisterSuccess = {
+                        navController.navigate(HomeRoute) { popUpTo(RegisterRoute) { inclusive = true } }
+                    },
+                    onErrorDismiss = authViewModel::clearRegisterError,
+                    onBackClick    = { navController.popBackStack() }
+                )
+            }
+
+            // ── Profile Setup ─────────────────────────────────────────────────
+            composable<ProfileSetupRoute> {
+                ProfileSetupScreen(
+                    onSetupComplete = {
+                        navController.navigate(HomeRoute) { popUpTo(ProfileSetupRoute) { inclusive = true } }
+                    },
+                    viewModel = profileViewModel
+                )
+            }
+
+            // ── Main ──────────────────────────────────────────────────────────
+            composable<HomeRoute> {
+                HomeScreen(
+                    userRole                  = currentRole,
+                    onNavigateToPlans         = { navController.navigate(PlansRoute) },
+                    onNavigateToProfile       = { navController.navigate(ProfileRoute) },
+                    onNavigateToChatbot       = { navController.navigate(ChatbotRoute) },
+                    onNavigateToStudents      = { navController.navigate(StudentsRoute) },
+                    onNavigateToLMSAttendance = { navController.navigate(LMSAttendanceRoute) },
+                    onNavigateToQRScanner     = { navController.navigate(QRScannerRoute) },
+                    onNavigateToAchievements  = { navController.navigate(AchievementsRoute) },
+                    onNavigateToModel         = { navController.navigate(ModelRoute) },
+                    onNavigateToTeacherQRDisplay = { navController.navigate(TeacherQRDisplayRoute) },
+                    viewModel                 = profileViewModel
+                )
+            }
+            composable<ProfileRoute> {
+                ProfileScreen(
+                    onBackClick               = { navController.popBackStack() },
+                    onNavigateToMuscleFatigue = { navController.navigate(MuscleFatigueRoute) },
+                    onNavigateToStats         = { navController.navigate(StatsRoute) },
+                    onSettingsClick           = { navController.navigate(SettingsRoute) },
+                    viewModel                 = profileViewModel
+                )
+            }
+            composable<PlansRoute> {
+                PlanListScreen(
+                    onPlanClick = { navController.navigate(PlanDetailRoute) },
+                    onBackClick = { navController.popBackStack() },
+                    onGenerateClick = { navController.navigate(AiPlanGeneratorRoute) }
+                )
+            }
+            composable<PlanDetailRoute> {
+                PlanDetailScreen(
+                    onBackClick     = { navController.popBackStack() },
+                    onFeedbackClick = { navController.navigate(FeedbackRoute) },
+                    onAIClick       = { navController.navigate(AIExplanationRoute) }
+                )
+            }
+            composable<FeedbackRoute>      { ExerciseFeedbackScreen(onBackClick = { navController.popBackStack() }) }
+            composable<MuscleFatigueRoute> { MuscleFatigueScreen(onBackClick = { navController.popBackStack() }) }
+            composable<StatsRoute>         { InteractionStatsScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AIExplanationRoute> { AIExplanationScreen(onBackClick = { navController.popBackStack() }) }
+            composable<ChatbotRoute>       { AiChatScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AiChatRoute> { AiChatScreen(onBackClick = { navController.popBackStack() }) }
+            composable<WorkoutRoute> {
+                val profileState by profileViewModel.state.collectAsStateWithLifecycle()
+                val profile = (profileState as? ProfileUiState.Loaded)?.profile ?: UserProfile()
+                WorkoutRecommendationScreen(profile = profile, onBackClick = { navController.popBackStack() })
+            }
+            composable<StudentsRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    StudentsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onStudentClick = { studentId -> navController.navigate(EditProfileRoute(studentId)) }
+                    )
+                }
+            }
+            composable<EditProfileRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    val route = backStackEntry?.toRoute<EditProfileRoute>() ?: return@composable
+                    if (route.studentId.isBlank()) {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                        return@composable
+                    }
+                    EditProfileScreen(
+                        studentId = route.studentId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+            }
+            composable<ModelRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    ModelScreen(onBackClick = { navController.popBackStack() })
+                }
+            }
+            composable<LMSAttendanceRoute> {
+                LMSAttendanceScreen(
+                    onBackClick           = { navController.popBackStack() },
+                    onNavigateToQRScanner = { navController.navigate(QRScannerRoute) },
+                    onNavigateToTheory    = { navController.navigate(TheoryRoute) }
+                )
+            }
+            composable<AchievementsRoute> { AchievementsScreen(
+                onBackClick = { navController.popBackStack() },
+                onNavigateToLeaderboard = { navController.navigate(LeaderboardRoute) }
+            ) }
+            composable<LeaderboardRoute> { LeaderboardScreen(onBackClick = { navController.popBackStack() }) }
+            composable<AiPlanGeneratorRoute> {
+                AiPlanGeneratorScreen(onBackClick = { navController.popBackStack() })
+            }
+            composable<QRScannerRoute>    { QRScannerScreen(
+                navController = navController,
+                onCheckInSuccess = { navController.popBackStack() }
+            ) }
+            composable<TeacherQRDisplayRoute> { TeacherQRDisplayScreen(
+                onBackClick = { navController.popBackStack() }
+            ) }
+            composable<SettingsRoute>     { SettingsScreen(authViewModel = authViewModel, navController = navController, onBackClick = { navController.popBackStack() }) }
+            composable<TheoryRoute> {
+                TheoryScreen(
+                    onStartQuiz = { navController.navigate(QuizRoute) },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable<QuizRoute> {
+                QuizScreen(
+                    onQuizComplete = { score, total ->
+                        navController.navigate(QuizResultRoute(score = score, total = total)) {
+                            popUpTo(TheoryRoute) { inclusive = true }
+                        }
+                    },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable<QuizResultRoute> {
+                val route = backStackEntry?.toRoute<QuizResultRoute>() ?: return@composable
+                QuizResultScreen(
+                    score   = route.score,
+                    total   = route.total,
+                    onRetry = {
+                        navController.navigate(QuizRoute) {
+                            popUpTo(QuizResultRoute(score = route.score, total = route.total)) { inclusive = true }
+                        }
+                    },
+                    onGoHome = { navController.popBackStack(LMSAttendanceRoute, inclusive = false) }
+                )
+            }
+        }
+    }
+}

@@ -1,12 +1,11 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,36 +33,34 @@ private val ColorSubtext = Color(0x80_0F0F23)
 private val GradientQrButton = Brush.horizontalGradient(listOf(ColorGreen, ColorCyan))
 
 @Composable
-fun LMSAttendanceScreen(onBackClick: () -> Unit = {}) {
-    Scaffold(
-        containerColor = ColorBackground,
-        bottomBar = { AttendanceBottomNav() }
-    ) { innerPadding ->
-        Box(
+fun LMSAttendanceScreen(
+    onBackClick: () -> Unit = {},
+    onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToTheory: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(listOf(ColorSurface, ColorBackground))
+            )
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(listOf(ColorSurface, ColorBackground))
-                )
-                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AttendanceTopBar(onBack = onBackClick)
-                Spacer(modifier = Modifier.height(8.dp))
-                QrCheckInButton()
-                Spacer(modifier = Modifier.height(24.dp))
-                AttendanceJournalSection()
-                Spacer(modifier = Modifier.height(20.dp))
-                NormativesSection()
-                Spacer(modifier = Modifier.height(20.dp))
-                TheoryTestsSection()
-            }
+            AttendanceTopBar(onBack = onBackClick)
+            Spacer(modifier = Modifier.height(8.dp))
+            QrCheckInButton(onClick = onNavigateToQRScanner)
+            Spacer(modifier = Modifier.height(24.dp))
+            AttendanceJournalSection()
+            Spacer(modifier = Modifier.height(20.dp))
+            NormativesSection()
+            Spacer(modifier = Modifier.height(20.dp))
+            TheoryTestsSection(onTestClick = onNavigateToTheory)
         }
     }
 }
@@ -98,12 +95,13 @@ private fun AttendanceTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun QrCheckInButton() {
+private fun QrCheckInButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .width(353.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(GradientQrButton)
+            .clickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -162,28 +160,26 @@ private fun AttendanceJournalSection() {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "12 / 16",
+                    text = "--",
                     color = ColorDark,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { 12f / 16f },
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = ColorGreen,
-                trackColor = ColorGreen.copy(alpha = 0.15f)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(ColorGreen.copy(alpha = 0.15f))
             )
             Spacer(modifier = Modifier.height(12.dp))
-            AttendanceRow(date = "10 Октября, Вт", status = "Присутствовал", statusColor = ColorGreen)
-            Spacer(modifier = Modifier.height(8.dp))
-            AttendanceRow(date = "08 Октября, Вс", status = "Тренировка ИИ", statusColor = ColorPurple)
-            Spacer(modifier = Modifier.height(8.dp))
-            AttendanceRow(date = "03 Октября, Вт", status = "Пропуск", statusColor = ColorRed)
+            Text(
+                text = "Данные о посещаемости в разработке",
+                color = ColorDark.copy(alpha = 0.5f),
+                fontSize = 13.sp
+            )
         }
     }
 }
@@ -213,23 +209,10 @@ private fun NormativesSection() {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            NormativeRow(
-                title = "Бег 3 км",
-                deadline = "Дедлайн: 15 Ноября",
-                badgeText = "Ожидает",
-                badgeTextColor = ColorYellow,
-                badgeBgColor = ColorYellow.copy(alpha = 0.15f)
-            )
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                color = ColorDark.copy(alpha = 0.07f)
-            )
-            NormativeRow(
-                title = "Подтягивания",
-                deadline = "Дедлайн: 1 Декабря",
-                badgeText = "Сдано (15)",
-                badgeTextColor = ColorGreen,
-                badgeBgColor = ColorGreen.copy(alpha = 0.15f)
+            Text(
+                text = "--",
+                color = ColorDark.copy(alpha = 0.5f),
+                fontSize = 14.sp
             )
         }
     }
@@ -265,13 +248,14 @@ private fun NormativeRow(
 }
 
 @Composable
-private fun TheoryTestsSection() {
+private fun TheoryTestsSection(onTestClick: () -> Unit = {}) {
     SectionHeader("ТЕОРЕТИЧЕСКИЕ ТЕСТЫ")
     Spacer(modifier = Modifier.height(8.dp))
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .clickable(onClick = onTestClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ColorCardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -314,44 +298,6 @@ private fun TheoryTestsSection() {
     }
 }
 
-@Composable
-private fun AttendanceBottomNav() {
-    NavigationBar(
-        containerColor = ColorCardBg,
-        tonalElevation = 0.dp
-    ) {
-        val items = listOf(
-            Triple("Главная", Icons.Default.Home, false),
-            Triple("Планы", Icons.Default.DateRange, false),
-            Triple("Обучение", Icons.Default.MenuBook, true),
-            Triple("Рейтинг", Icons.Default.EmojiEvents, false),
-            Triple("Профиль", Icons.Default.Person, false),
-        )
-        items.forEach { (label, icon, selected) ->
-            NavigationBarItem(
-                selected = selected,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        tint = if (selected) ColorPrimary else ColorDark.copy(alpha = 0.4f)
-                    )
-                },
-                label = {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        color = if (selected) ColorPrimary else ColorDark.copy(alpha = 0.4f)
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent
-                )
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

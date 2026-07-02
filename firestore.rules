@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isTeacher() {
+      return request.auth.token.email != null && 
+             (request.auth.token.email.lower().matches('.*teacher.*') || 
+              request.auth.token.email.lower().matches('.*prof.*'));
+    }
+    
+    match /workout_plans/{planId} {
+      allow read: if request.auth != null;
+      allow write: if isTeacher();
+    }
+    
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /plans/{planId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /injuries/{injuryId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /quizScores/{scoreId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    match /testScores/{docId} {
+      allow read, write: if isTeacher();
+    }
+    
+    match /achievements/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isTeacher();
+    }
+    
+    match /leaderboard/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isTeacher();
+    }
+  }
+}

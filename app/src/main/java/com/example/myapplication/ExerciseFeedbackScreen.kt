@@ -8,12 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.ui.graphics.vector.ImageVector
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +36,6 @@ private val Dark = Color(0xFF0F0F23)
 private val DarkMuted = Color(0x660F0F23)
 private val InputBg = Color(0xFFF5F7FF)
 private val White = Color(0xFFFFFFFF)
-private val NavBg = Color(0xFFF8F9FF)
 
 private val cardGradient = Brush.linearGradient(
     colors = listOf(Color(0x146C63FF), Color(0x0D4ECDC4))
@@ -76,14 +70,14 @@ fun ExerciseFeedbackScreen(onBackClick: () -> Unit = {}) {
         )
     }
 
-    Scaffold(
-        containerColor = White,
-        bottomBar = { FeedbackBottomNavBar() }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             FeedbackTopBar(onBackClick = onBackClick)
@@ -461,55 +455,7 @@ private fun RatingButton(
     }
 }
 
-@Composable
-private fun FeedbackBottomNavBar() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(NavBg)
-            .border(width = 1.dp, color = Color(0x1A000000), shape = RoundedCornerShape(0.dp))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavBarItem(icon = Icons.Default.Home, label = "Главная", isSelected = false)
-            NavBarItem(icon = Icons.Default.Star, label = "План", isSelected = true)
-            NavBarItem(icon = Icons.Default.Favorite, label = "Прогресс", isSelected = false)
-            NavBarItem(icon = Icons.Default.Person, label = "Профиль", isSelected = false)
-        }
-    }
-}
 
-@Composable
-private fun NavBarItem(
-    icon: ImageVector,
-    label: String,
-    isSelected: Boolean
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier.padding(horizontal = 8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Purple else DarkMuted,
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Purple else DarkMuted,
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-        )
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

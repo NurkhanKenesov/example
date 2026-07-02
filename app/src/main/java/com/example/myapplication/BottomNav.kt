@@ -6,6 +6,6 @@ val navItems = listOf(
     NavItem("🏠", "Главная"),
     NavItem("📅", "Планы"),
     NavItem("📚", "Обучение"),
-    NavItem("🏆", "Рейтинг"),
-    NavItem("👤", "Профиль"),
+    NavItem("💪", "Достижения"),
+    NavItem("👤", "Профиль")
 )

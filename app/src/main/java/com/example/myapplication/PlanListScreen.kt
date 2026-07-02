@@ -1,11 +1,14 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,8 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// ── Design tokens ──────────────────────────────────────────────────────────────
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
+import com.example.myapplication.data.models.PlanStatus
+import com.example.myapplication.data.models.TrainingPlan
 
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
@@ -38,70 +44,21 @@ private val AmberBg = Color(0x26FB923C)
 private val Red = Color(0xFFF87171)
 private val RedBg = Color(0x26F87171)
 
-// ── Data model ─────────────────────────────────────────────────────────────────
-
-enum class PlanStatus(
-    val emoji: String,
-    val label: String,
-    val badgeColor: Color,
-    val badgeBg: Color,
-) {
-    COMPLETED("✅", "COMPLETED", Green, GreenBg),
-    SCHEDULED("🕐", "SCHEDULED", Amber, AmberBg),
-    DISCARDED("❌", "DISCARDED", Red, RedBg),
-}
-
-data class TrainingPlan(
-    val id: Int,
-    val name: String,
-    val exerciseCount: Int,
-    val date: String,
-    val status: PlanStatus,
-    val statusNote: String,
-    val progressFraction: Float,
-    val currentDayIndex: Int,   // 0 = before ПН, 1 = at ПН, etc. (-1 = none)
-)
-
-private val samplePlans = listOf(
-    TrainingPlan(
-        id = 1247,
-        name = "Тренировочный план #1247",
-        exerciseCount = 21,
-        date = "2026-06-09",
-        status = PlanStatus.COMPLETED,
-        statusNote = "👍 Liked",
-        progressFraction = 1f,
-        currentDayIndex = -1,
-    ),
-    TrainingPlan(
-        id = 1248,
-        name = "Тренировочный план #1248",
-        exerciseCount = 21,
-        date = "2026-06-11",
-        status = PlanStatus.SCHEDULED,
-        statusNote = "Активный",
-        progressFraction = 0.15f,
-        currentDayIndex = 0,
-    ),
-    TrainingPlan(
-        id = 1245,
-        name = "Тренировочный план #1245",
-        exerciseCount = 21,
-        date = "2026-06-02",
-        status = PlanStatus.DISCARDED,
-        statusNote = "👎 Disliked",
-        progressFraction = 0f,
-        currentDayIndex = -1,
-    ),
-)
-
-// ── Screen ─────────────────────────────────────────────────────────────────────
-
 @Composable
 fun PlanListScreen(
     onPlanClick: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onGenerateClick: () -> Unit = {}
 ) {
+    val viewModel: PlansViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val medicalGroup by viewModel.profileMedicalGroup.collectAsStateWithLifecycle()
+    val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+
+    LaunchedEffect(medicalGroup) {
+        viewModel.loadAssignedWorkoutPlan()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -110,51 +67,225 @@ fun PlanListScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 112.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Title
-            Text(
-                text = "📅 Мои планы",
-                color = Ebony,
-                fontSize = 34.sp,
-                fontWeight = FontWeight.W800,
-                lineHeight = 39.1.sp,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 3.5.dp)
-                    .paddingFromBaseline(bottom = 15.59.dp),
-            )
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 3.5.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "‹",
+                        color = GradientStart,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.W800,
+                        modifier = Modifier.clickable { onBackClick() }
+                    )
+                    Text(
+                        text = "📅 Мои планы",
+                        color = Ebony,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.W800,
+                        lineHeight = 39.1.sp,
+                        modifier = Modifier.paddingFromBaseline(bottom = 15.59.dp),
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            // Generate button
-            GenerateButton()
+                GenerateButton(
+                    onClick = {
+                        onGenerateClick.invoke()
+                    },
+                    isSaving = isSaving
+                )
 
-            Spacer(Modifier.height(8.dp))
-
-            // Plan cards
-            samplePlans.forEach { plan ->
-                PlanCard(plan = plan)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(8.dp))
+                
+                when (uiState) {
+                    is PlansUiState.WorkoutPlanLoaded -> {
+                        val plan = (uiState as PlansUiState.WorkoutPlanLoaded).plan
+                        PlanHeader(plan = plan)
+                    }
+                    is PlansUiState.Error -> {
+                        val message = (uiState as PlansUiState.Error).message
+                        ErrorState(message = message)
+                    }
+                    PlansUiState.Loading -> {
+                        LoadingState()
+                    }
+                    is PlansUiState.Loaded -> {
+                        EmptyPlansState()
+                    }
+                }
+            }
+            
+            when (uiState) {
+                is PlansUiState.WorkoutPlanLoaded -> {
+                    val plan = (uiState as PlansUiState.WorkoutPlanLoaded).plan
+                    if (plan.exercises.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(plan.exercises, key = { it.id }) { exercise -> 
+                                ExerciseRow(exercise = exercise)
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
-
-        // Bottom navigation
-        BottomNavBar(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
-// ── Generate button ────────────────────────────────────────────────────────────
+@Composable
+private fun PlanHeader(plan: WorkoutPlan) {
+    Column {
+        Text(
+            text = plan.title,
+            color = Ebony,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W700,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Text(
+            text = plan.description,
+            color = EbonyAlpha40,
+            fontSize = 13.sp,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+    }
+}
 
 @Composable
-private fun GenerateButton() {
+private fun LoadingState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "...",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.W700,
+            color = Ebony.copy(alpha = 0.3f)
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Загрузка плана тренировок",
+            fontSize = 16.sp,
+            color = Ebony.copy(alpha = 0.5f)
+        )
+    }
+}
+
+@Composable
+private fun ErrorState(message: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "⚠️",
+            fontSize = 32.sp
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Ошибка: $message",
+            fontSize = 14.sp,
+            color = Red,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ExerciseRow(exercise: WorkoutExercise) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White)
+            .padding(14.dp),
+    ) {
+        Text(
+            text = "${exercise.emoji} ${exercise.name}",
+            color = Ebony,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W600
+        )
+        if (exercise.description.isNotBlank()) {
+            Text(
+                text = exercise.description,
+                color = EbonyAlpha40,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
+        Text(
+            text = "Сеты: ${exercise.sets} • Повт.: ${exercise.reps}",
+            color = EbonyAlpha40,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun EmptyPlansState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "—",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.W700,
+            color = Ebony.copy(alpha = 0.2f)
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Планы отсутствуют",
+            fontSize = 16.sp,
+            color = Ebony.copy(alpha = 0.5f)
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Создайте первый план или подождите, пока преподаватель назначит тренировку",
+            fontSize = 13.sp,
+            color = Ebony.copy(alpha = 0.4f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun GenerateButton(onClick: () -> Unit = {}, isSaving: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Brush.linearGradient(listOf(GradientStart, GradientEnd))),
+            .background(Brush.linearGradient(listOf(GradientStart, GradientEnd)))
+            .clickable(enabled = !isSaving) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -164,7 +295,7 @@ private fun GenerateButton() {
         ) {
             Text("✨", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.W700)
             Text(
-                text = "Сгенерировать новый план",
+                text = if (isSaving) "Сохранение..." else "Сгенерировать новый план",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.W700,
@@ -173,20 +304,18 @@ private fun GenerateButton() {
     }
 }
 
-// ── Plan card ──────────────────────────────────────────────────────────────────
-
 @Composable
-private fun PlanCard(plan: TrainingPlan) {
+private fun PlanCard(plan: TrainingPlan, onPlanClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), spotColor = Color(0x0F000000))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
+            .clickable { onPlanClick() }
             .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        // Status badge + date row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,7 +332,6 @@ private fun PlanCard(plan: TrainingPlan) {
 
         Spacer(Modifier.height(6.dp))
 
-        // Plan name
         Text(
             text = plan.name,
             color = Ebony,
@@ -214,7 +342,6 @@ private fun PlanCard(plan: TrainingPlan) {
 
         Spacer(Modifier.height(2.dp))
 
-        // Exercise count + status note
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -240,7 +367,6 @@ private fun PlanCard(plan: TrainingPlan) {
 
         Spacer(Modifier.height(12.dp))
 
-        // Weekly progress bar
         WeeklyProgressBar(
             progressFraction = plan.progressFraction,
             currentDayIndex = plan.currentDayIndex,
@@ -270,8 +396,6 @@ private fun StatusBadge(status: PlanStatus) {
     }
 }
 
-// ── Weekly progress bar ────────────────────────────────────────────────────────
-
 @Composable
 private fun WeeklyProgressBar(
     progressFraction: Float,
@@ -281,7 +405,6 @@ private fun WeeklyProgressBar(
     val trackColor = Color(0xFFF0F0F8)
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Track
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -299,11 +422,9 @@ private fun WeeklyProgressBar(
                 )
             }
 
-            // Current-day marker
             if (currentDayIndex >= 0) {
-                val markerFraction = progressFraction.coerceIn(0f, 1f)
                 Row(modifier = Modifier.fillMaxSize()) {
-                    Spacer(Modifier.weight(markerFraction.coerceAtLeast(0f)))
+                    Spacer(Modifier.weight(progressFraction.coerceAtLeast(0f)))
                     Box(
                         modifier = Modifier
                             .width(2.dp)
@@ -316,7 +437,6 @@ private fun WeeklyProgressBar(
 
         Spacer(Modifier.height(4.dp))
 
-        // Day labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -350,51 +470,6 @@ private fun DayLabel(label: String, isActive: Boolean, barColor: Color) {
     }
 }
 
-// ── Bottom navigation bar ──────────────────────────────────────────────────────
-
-
-@Composable
-private fun BottomNavBar(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(Color.White)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            navItems.forEach { item ->
-                BottomNavItem(item = item)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BottomNavItem(item: NavItem) {
-    val labelColor = if (item.isActive) GradientStart else EbonyAlpha40
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-    ) {
-        Text(text = item.icon, fontSize = 22.sp)
-        Text(
-            text = item.label,
-            color = labelColor,
-            fontSize = 10.sp,
-            fontWeight = if (item.isActive) FontWeight.W600 else FontWeight.W400,
-        )
-    }
-}
-
-// ── Preview ────────────────────────────────────────────────────────────────────
 
 @Preview(showSystemUi = true)
 @Composable

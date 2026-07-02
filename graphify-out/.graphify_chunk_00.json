@@ -1,0 +1,27 @@
+{
+  "files": [
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-ai-logic-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-ai-logic-basics/references/flutter_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-ai-logic-basics/references/ios_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-ai-logic-basics/references/usage_patterns_android.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-ai-logic-basics/references/usage_patterns_web.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-app-hosting-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-app-hosting-basics/references/cli_commands.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-app-hosting-basics/references/configuration.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-app-hosting-basics/references/emulation.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/references/client_sdk_android.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/references/client_sdk_web.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/references/flutter_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/references/ios_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-auth-basics/references/security_rules.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/android_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/firebase-cli-guide.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/firebase-service-init.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/flutter_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/ios_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/local-env-setup.md"
+  ],
+  "type": "docs"
+}

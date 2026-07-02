@@ -1,0 +1,229 @@
+{
+  "nodes": [
+    {
+      "id": "agents_skills_firebase_basics_references_refresh_android_studio",
+      "label": "Refresh Android Studio Local Environment",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/refresh/android_studio.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_refresh_antigravity",
+      "label": "Refresh Antigravity Local Environment",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/refresh/antigravity.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_refresh_claude",
+      "label": "Refresh Claude Code Local Environment",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/refresh/claude.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_refresh_gemini_cli",
+      "label": "Refresh Gemini CLI Local Environment",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/refresh/gemini-cli.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_refresh_other_agents",
+      "label": "Refresh Other Local Environment",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/refresh/other-agents.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_android_studio",
+      "label": "Android Studio Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/android_studio.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_antigravity",
+      "label": "Antigravity Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/antigravity.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_claude_code",
+      "label": "Claude Code Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/claude_code.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_cursor",
+      "label": "Cursor Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/cursor.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_gemini_cli",
+      "label": "Gemini CLI Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/gemini_cli.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_github_copilot",
+      "label": "GitHub Copilot Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/github_copilot.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_setup_other_agents",
+      "label": "Other Agents Setup",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/setup/other_agents.md"
+    },
+    {
+      "id": "agents_skills_firebase_basics_references_web_setup",
+      "label": "Firebase Web Setup Guide",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-basics/references/web_setup.md"
+    },
+    {
+      "id": "agents_skills_firebase_crashlytics_SKILL",
+      "label": "Firebase Crashlytics Skill",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/SKILL.md"
+    },
+    {
+      "id": "agents_skills_firebase_crashlytics_references_android_setup",
+      "label": "Firebase Crashlytics Android Setup Guide",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/references/android_setup.md"
+    },
+    {
+      "id": "agents_skills_firebase_crashlytics_references_ios_setup",
+      "label": "Firebase Crashlytics iOS Setup Guide",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/references/ios_setup.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_SKILL",
+      "label": "Firebase SQL Connect Skill",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_examples",
+      "label": "Firebase SQL Connect Examples",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/examples.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_reference_cloud_functions",
+      "label": "Cloud Functions Integration Reference",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/reference/cloud_functions.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_reference_config",
+      "label": "Configuration Reference",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/reference/config.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_reference_data_seeding",
+      "label": "Data Seeding & Bulk Operations Reference",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/reference/data_seeding.md"
+    },
+    {
+      "id": "agents_skills_firebase_data_connect_reference_native_sql",
+      "label": "Native SQL Operations",
+      "file_type": "document",
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/reference/native_sql.md"
+    }
+  ],
+  "edges": [
+    {
+      "source": "agents_skills_firebase_crashlytics_SKILL",
+      "target": "agents_skills_firebase_basics_references_setup_android_studio",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_crashlytics_SKILL",
+      "target": "agents_skills_firebase_crashlytics_references_android_setup",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_crashlytics_SKILL",
+      "target": "agents_skills_firebase_crashlytics_references_ios_setup",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_crashlytics_references_android_setup",
+      "target": "agents_skills_firebase_basics_references_web_setup",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/references/android_setup.md"
+    },
+    {
+      "source": "agents_skills_firebase_crashlytics_references_ios_setup",
+      "relation": "references",
+      "target": "agents_skills_firebase_basics_references_setup_antigravity",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/references/ios_setup.md"
+    },
+    {
+      "source": "agents_skills_firebase_crashlytics_references_ios_setup",
+      "relation": "references",
+      "target": "agents_skills_firebase_crashlytics_SKILL",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-crashlytics/references/ios_setup.md"
+    },
+    {
+      "source": "agents_skills_firebase_data_connect_SKILL",
+      "target": "agents_skills_firebase_data_connect_reference_config",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_data_connect_SKILL",
+      "target": "agents_skills_firebase_data_connect_examples",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_data_connect_SKILL",
+      "target": "agents_skills_firebase_data_connect_reference_cloud_functions",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_data_connect_SKILL",
+      "target": "agents_skills_firebase_data_connect_reference_data_seeding",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    },
+    {
+      "source": "agents_skills_firebase_data_connect_SKILL",
+      "target": "agents_skills_firebase_data_connect_reference_native_sql",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-data-connect/SKILL.md"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.ExerciseStat
+import com.example.myapplication.data.models.StatCard
 
 private val ColorPurple = Color(0xFF6C63FF)
 private val ColorPurpleBorder = Color(0x336C63FF)
@@ -37,39 +39,16 @@ private val ColorSectionLabel = Color(0x4D0F0F23)
 private val ColorDivider = Color(0x0F000000)
 private val ColorCardBg = Color(0xFFFFFFFF)
 
-private data class StatCard(
-    val value: String,
-    val label: String,
-    val valueColor: Color,
-    val bgColor: Color
-)
-
-private data class ExerciseStat(
-    val emoji: String,
-    val emojiBg: Color,
-    val name: String,
-    val attempts: String,
-    val percentage: String,
-    val difficulty: String,
-    val percentageColor: Color
-)
-
-private val statCards = listOf(
-    StatCard("87%", "Выполнение", ColorPurple, ColorPurpleBg),
-    StatCard("3.1", "Ср. сложность", ColorGreen, ColorGreenBg),
-    StatCard("0.92", "Set ratio", ColorYellow, ColorYellowBg)
-)
-
-private val exercises = listOf(
-    ExerciseStat("🦵", Color(0x1A4ADE80), "Push-ups", "9 попыток", "95%", "Normal", ColorGreen),
-    ExerciseStat("🤸", Color(0x1A6C63FF), "Jumping Jacks", "8 попыток", "100%", "Easy", ColorGreen),
-    ExerciseStat("🏋️", Color(0x1AFBBF24), "Squats", "7 попыток", "78%", "Hard", ColorYellow),
-    ExerciseStat("💪", Color(0x1AF87171), "Pull-ups", "6 попыток", "55%", "Very Hard", ColorRed),
-    ExerciseStat("🧘", Color(0x1A4ADE80), "Plank", "8 попыток", "90%", "Normal", ColorGreen)
-)
-
 @Composable
 fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
+    val statCards = listOf(
+        StatCard("--", "Выполнение", ColorPurple, ColorPurpleBg),
+        StatCard("--", "Ср. сложность", ColorGreen, ColorGreenBg),
+        StatCard("--", "Set ratio", ColorYellow, ColorYellowBg)
+    )
+    
+    val exercises = emptyList<ExerciseStat>()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +63,6 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Nav bar with back navigation
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,7 +82,6 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                 )
             }
 
-            // Large title
             Text(
                 text = "📊 Статистика",
                 color = ColorTextDark,
@@ -119,7 +96,6 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                 )
             )
 
-            // Summary stat cards
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -131,7 +107,6 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                 }
             }
 
-            // Section header
             Text(
                 text = "ПО УПРАЖНЕНИЯМ",
                 color = ColorSectionLabel,
@@ -141,7 +116,6 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
             )
 
-            // Exercise list card
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,15 +123,17 @@ fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {
                     .clip(RoundedCornerShape(20.dp))
                     .background(ColorCardBg)
             ) {
-                exercises.forEachIndexed { index, exercise ->
-                    ExerciseRowItem(exercise = exercise)
-                    if (index < exercises.lastIndex) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .height(0.5.dp)
-                                .background(ColorDivider)
+                if (exercises.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "--",
+                            color = ColorTextMuted,
+                            fontSize = 16.sp
                         )
                     }
                 }

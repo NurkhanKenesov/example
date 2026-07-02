@@ -24,6 +24,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.FactorRow
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 
@@ -42,16 +43,6 @@ private val PurpleCardBorder = Color(0x336C63FF)
 private val PurpleCardBgStart = Color(0x146C63FF)
 private val PurpleCardBgEnd = Color(0x0D4ECDC4)
 private val ShapButtonBg = Color(0xFFEEEBFF)
-
-// ── Data ───────────────────────────────────────────────────────────────────────
-
-private data class FactorRow(
-    val label: String,
-    val value: String,
-    val valueColor: Color,
-    val barColor: Color,
-    val barFraction: Float,
-)
 
 private val factors = listOf(
     FactorRow("Физ. готовность", "+0.24", SpringGreen, SpringGreen, 0.85f),
@@ -73,8 +64,7 @@ fun AIExplanationScreen(onBackClick: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 96.dp),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AiTopNavBar(onBackClick = onBackClick)
@@ -91,8 +81,6 @@ fun AIExplanationScreen(onBackClick: () -> Unit = {}) {
             ShapButton()
             Spacer(Modifier.height(16.dp))
         }
-
-        AiBottomNavBar(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -368,47 +356,7 @@ private fun ShapButton() {
     }
 }
 
-// ── Bottom navigation bar ──────────────────────────────────────────────────────
 
-@Composable
-private fun AiBottomNavBar(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(Color.White)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            navItems.forEach { item ->
-                val isActive = item.label == "Планы"
-                AiNavBottomItem(icon = item.icon, label = item.label, isActive = isActive)
-            }
-        }
-    }
-}
-
-@Composable
-private fun AiNavBottomItem(icon: String, label: String, isActive: Boolean) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-    ) {
-        Text(text = icon, fontSize = 22.sp)
-        Text(
-            text = label,
-            color = if (isActive) PrimaryBlue else EbonyAlpha40,
-            fontSize = 10.sp,
-            fontWeight = if (isActive) FontWeight.W600 else FontWeight.W400,
-        )
-    }
-}
 
 // ── Preview ────────────────────────────────────────────────────────────────────
 
