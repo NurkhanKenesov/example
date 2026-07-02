@@ -33,6 +33,8 @@ class UserProfileViewModel(
             _state.value = ProfileUiState.Loading
             userProfileRepository.getProfile().fold(
                 onSuccess = { profile ->
+                    val loadedProfile = profile ?: UserProfile()
+                    android.util.Log.d("UserProfileViewModel", "Profile loaded: uid=${loadedProfile.uid}, role=${loadedProfile.role}, name=${loadedProfile.name}")
                     if (profile != null) {
                         _state.value = ProfileUiState.Loaded(profile)
                     } else {
@@ -40,6 +42,7 @@ class UserProfileViewModel(
                     }
                 },
                 onFailure = { e ->
+                    android.util.Log.e("UserProfileViewModel", "Profile load failed: ${e.message}")
                     _state.value = ProfileUiState.Error(e.message ?: "Ошибка загрузки профиля")
                 }
             )

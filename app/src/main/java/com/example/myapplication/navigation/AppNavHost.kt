@@ -33,30 +33,44 @@ fun AppNavHost(
     val loginState    by authViewModel.loginState.collectAsStateWithLifecycle()
     val registerState by authViewModel.registerState.collectAsStateWithLifecycle()
     val profileState  by profileViewModel.state.collectAsStateWithLifecycle()
+    val currentUser   by authViewModel.currentUser.collectAsStateWithLifecycle()
+
+    LaunchedEffect(currentUser) {
+        currentRole = when (currentUser?.role) {
+            "Teacher" -> UserRole.Teacher
+            else -> UserRole.Student
+        }
+    }
 
     LaunchedEffect(profileState) {
         if (profileState is ProfileUiState.Loaded) {
-            currentRole = when (authViewModel.currentUserRole) {
+            val profile = (profileState as ProfileUiState.Loaded).profile
+            currentRole = when (profile.role) {
                 "Teacher" -> UserRole.Teacher
                 else -> UserRole.Student
             }
         }
     }
 
+    LaunchedEffect(Unit) {
+        authViewModel.refreshCurrentUser()
+    }
+
     val startDestination: Any = if (authViewModel.isLoggedIn()) {
         if (profileViewModel.isProfileComplete()) HomeRoute else ProfileSetupRoute
     } else WelcomeRoute
 
-    val showBottomBar = currentDestination?.hasRoute(HomeRoute::class) == true ||
-            currentDestination?.hasRoute(PlansRoute::class) == true ||
-            currentDestination?.hasRoute(PlanDetailRoute::class) == true ||
-            currentDestination?.hasRoute(LMSAttendanceRoute::class) == true ||
-            currentDestination?.hasRoute(AchievementsRoute::class) == true ||
-            currentDestination?.hasRoute(ProfileRoute::class) == true ||
-            currentDestination?.hasRoute(StudentsRoute::class) == true ||
-            currentDestination?.hasRoute(AiChatRoute::class) == true ||
-            currentDestination?.hasRoute(WorkoutRoute::class) == true ||
-            currentDestination?.hasRoute(LeaderboardRoute::class) == true
+val showBottomBar = currentDestination?.hasRoute(HomeRoute::class) == true ||
+         currentDestination?.hasRoute(PlansRoute::class) == true ||
+         currentDestination?.hasRoute(PlanDetailRoute::class) == true ||
+         currentDestination?.hasRoute(LMSAttendanceRoute::class) == true ||
+         currentDestination?.hasRoute(AchievementsRoute::class) == true ||
+         currentDestination?.hasRoute(ProfileRoute::class) == true ||
+         currentDestination?.hasRoute(StudentsRoute::class) == true ||
+         currentDestination?.hasRoute(ModelRoute::class) == true ||
+         currentDestination?.hasRoute(AiChatRoute::class) == true ||
+         currentDestination?.hasRoute(WorkoutRoute::class) == true ||
+         currentDestination?.hasRoute(LeaderboardRoute::class) == true
 
     Scaffold(
         bottomBar = {
@@ -78,8 +92,7 @@ val studentRouteMap = mapOf(
                         "Главная"    to HomeRoute,
                         "Студенты"   to StudentsRoute,
                         "Планы"      to PlansRoute,
-                        "Обучение"   to LMSAttendanceRoute,
-                        "Достижения" to AchievementsRoute,
+                        "Модель"     to ModelRoute,
                         "Профиль"    to ProfileRoute
                     )
                     val routeMap = if (currentRole == UserRole.Teacher) teacherRouteMap else studentRouteMap
@@ -87,30 +100,31 @@ val studentRouteMap = mapOf(
                         NavItem("🏠", "Главная"),
                         NavItem("👨\u200d🏫", "Студенты"),
                         NavItem("📅", "Планы"),
-                        NavItem("📚", "Обучение"),
-                        NavItem("🏆", "Достижения"),
+                        NavItem("🤖", "Модель"),
                         NavItem("👤", "Профиль")
                     )
                     val itemsToShow = if (currentRole == UserRole.Teacher) teacherNavItems else navItems
 
-                    itemsToShow.forEach { item ->
-                        val route = routeMap[item.label] ?: HomeRoute
-                        val isSelected = currentDestination?.hasRoute(route::class) == true
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                if (!isSelected) {
-                                    if (route == HomeRoute) {
-                                        navController.popBackStack(HomeRoute, inclusive = false)
-                                    } else {
-                                        navController.navigate(route) {
-                                            popUpTo(HomeRoute::class) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
-                                }
-                            },
+itemsToShow.forEach { item ->
+
+                         val route = routeMap[item.label] ?: HomeRoute
+                         val isSelected = currentDestination?.hasRoute(route::class) == true
+                         NavigationBarItem(
+                             selected = isSelected,
+                             onClick = {
+                                 if (!isSelected) {
+                                     if (route == HomeRoute) {
+                                         navController.popBackStack(HomeRoute, inclusive = false)
+                                     } else {
+                                         navController.popBackStack<EditProfileRoute>(inclusive = true)
+                                         navController.navigate(route) {
+                                             popUpTo(HomeRoute) { inclusive = false }
+                                             launchSingleTop = true
+                                             restoreState = true
+                                         }
+                                     }
+                                 }
+                             },
                             icon  = { Text(text = item.icon, fontSize = 20.sp) },
                             label = { Text(text = item.label, fontSize = 10.sp) }
                         )
@@ -152,10 +166,11 @@ val studentRouteMap = mapOf(
                     uiState          = registerState,
                     onRegisterClick  = { email, password, studentId, role ->
                         selectedRole = role
-                        authViewModel.register(email, password, role.name)
+                        val name = email.substringBefore("@").replaceFirstChar { it.uppercase() }
+                        authViewModel.register(email, password, role.name, name)
                     },
                     onRegisterSuccess = {
-                        navController.navigate(ProfileSetupRoute) { popUpTo(RegisterRoute) { inclusive = true } }
+                        navController.navigate(HomeRoute) { popUpTo(RegisterRoute) { inclusive = true } }
                     },
                     onErrorDismiss = authViewModel::clearRegisterError,
                     onBackClick    = { navController.popBackStack() }
@@ -183,6 +198,8 @@ val studentRouteMap = mapOf(
                     onNavigateToLMSAttendance = { navController.navigate(LMSAttendanceRoute) },
                     onNavigateToQRScanner     = { navController.navigate(QRScannerRoute) },
                     onNavigateToAchievements  = { navController.navigate(AchievementsRoute) },
+                    onNavigateToModel         = { navController.navigate(ModelRoute) },
+                    onNavigateToTeacherQRDisplay = { navController.navigate(TeacherQRDisplayRoute) },
                     viewModel                 = profileViewModel
                 )
             }
@@ -222,9 +239,28 @@ val studentRouteMap = mapOf(
             }
             composable<StudentsRoute> {
                 if (currentRole == UserRole.Teacher) {
-                    StudentsScreen(onBackClick = { navController.popBackStack() })
-                } else {
-                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    StudentsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onStudentClick = { studentId -> navController.navigate(EditProfileRoute(studentId)) }
+                    )
+                }
+            }
+            composable<EditProfileRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    val route = backStackEntry?.toRoute<EditProfileRoute>() ?: return@composable
+                    if (route.studentId.isBlank()) {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                        return@composable
+                    }
+                    EditProfileScreen(
+                        studentId = route.studentId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+            }
+            composable<ModelRoute> {
+                if (currentRole == UserRole.Teacher) {
+                    ModelScreen(onBackClick = { navController.popBackStack() })
                 }
             }
             composable<LMSAttendanceRoute> {
@@ -242,7 +278,13 @@ val studentRouteMap = mapOf(
             composable<AiPlanGeneratorRoute> {
                 AiPlanGeneratorScreen(onBackClick = { navController.popBackStack() })
             }
-            composable<QRScannerRoute>    { QRScannerScreen(navController = navController) }
+            composable<QRScannerRoute>    { QRScannerScreen(
+                navController = navController,
+                onCheckInSuccess = { navController.popBackStack() }
+            ) }
+            composable<TeacherQRDisplayRoute> { TeacherQRDisplayScreen(
+                onBackClick = { navController.popBackStack() }
+            ) }
             composable<SettingsRoute>     { SettingsScreen(authViewModel = authViewModel, navController = navController, onBackClick = { navController.popBackStack() }) }
             composable<TheoryRoute> {
                 TheoryScreen(
@@ -275,10 +317,4 @@ val studentRouteMap = mapOf(
             }
         }
     }
-}
-
-private fun deriveRoleFromEmail(email: String): UserRole {
-    val lower = email.lowercase()
-    return if (lower.contains("teacher") || lower.contains("prof")) UserRole.Teacher
-    else UserRole.Student
 }

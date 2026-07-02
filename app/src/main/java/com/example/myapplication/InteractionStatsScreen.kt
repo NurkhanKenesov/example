@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.ExerciseStat
+import com.example.myapplication.data.models.StatCard
 
 private val ColorPurple = Color(0xFF6C63FF)
 private val ColorPurpleBorder = Color(0x336C63FF)
@@ -36,23 +38,6 @@ private val ColorTextMuted = Color(0x660F0F23)
 private val ColorSectionLabel = Color(0x4D0F0F23)
 private val ColorDivider = Color(0x0F000000)
 private val ColorCardBg = Color(0xFFFFFFFF)
-
-data class StatCard(
-    val value: String,
-    val label: String,
-    val valueColor: Color,
-    val bgColor: Color
-)
-
-data class ExerciseStat(
-    val emoji: String,
-    val emojiBg: Color,
-    val name: String,
-    val attempts: String,
-    val percentage: String,
-    val difficulty: String,
-    val percentageColor: Color
-)
 
 @Composable
 fun InteractionStatsScreen(onBackClick: () -> Unit = {}) {

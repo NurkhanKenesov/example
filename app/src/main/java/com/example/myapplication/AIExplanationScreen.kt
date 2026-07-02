@@ -24,6 +24,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.FactorRow
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 
@@ -42,16 +43,6 @@ private val PurpleCardBorder = Color(0x336C63FF)
 private val PurpleCardBgStart = Color(0x146C63FF)
 private val PurpleCardBgEnd = Color(0x0D4ECDC4)
 private val ShapButtonBg = Color(0xFFEEEBFF)
-
-// ── Data ───────────────────────────────────────────────────────────────────────
-
-private data class FactorRow(
-    val label: String,
-    val value: String,
-    val valueColor: Color,
-    val barColor: Color,
-    val barFraction: Float,
-)
 
 private val factors = listOf(
     FactorRow("Физ. готовность", "+0.24", SpringGreen, SpringGreen, 0.85f),

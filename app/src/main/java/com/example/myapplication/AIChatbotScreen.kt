@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.example.myapplication.data.models.ChatMessage
 
 private val PurplePrimary = Color(0xFF6C63FF)
 private val PurpleLight = Color(0xFF8B5CF6)
@@ -35,11 +36,6 @@ private val ScreenGradient = Brush.verticalGradient(
 private val BotAvatarGradient = Brush.linearGradient(
     colors = listOf(PurplePrimary, PurpleLight)
 )
-
-sealed class ChatMessage {
-    data class Bot(val paragraphs: List<String>) : ChatMessage()
-    data class User(val text: String, val initials: String) : ChatMessage()
-}
 
 private val SYSTEM_PROMPT = "Ты помощник по физкультуре для школьников. Отвечай коротко, по-русски."
 

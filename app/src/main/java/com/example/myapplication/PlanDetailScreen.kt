@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.DayTab
 
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
@@ -35,8 +36,6 @@ private val VioletIconBg = Color(0x266C63FF)
 private val GreenIconBg = Color(0x264ADE80)
 private val DividerColor = Color(0x0F000000)
 private val CardBorderColor = Color(0x12000000)
-
-data class DayTab(val shortName: String, val type: String)
 
 @Composable
 fun PlanDetailScreen(

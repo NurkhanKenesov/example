@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
+import com.example.myapplication.data.models.HealthGroup
+import com.example.myapplication.data.models.UiStudent
 
 // ── Colours (local to this screen) ───────────────────────────────────────────
 
@@ -58,11 +60,11 @@ private val RedBg             = Color(0x26F87171)
 
 private val PurpleGradient = Brush.linearGradient(
     colors = listOf(Purple, Violet),
-    start = Offset.Zero, end = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
+    start = Offset.Zero, end = Offset.Infinite
 )
 private val AttendanceCardGradient = Brush.linearGradient(
     colors = listOf(AttendanceBg1, AttendanceBg2),
-    start = Offset.Zero, end = Offset(Float.MAX_VALUE, 0f)
+    start = Offset.Zero, end = Offset.Infinite
 )
 
 private val avatarGradients = listOf(
@@ -75,44 +77,32 @@ private val avatarGradients = listOf(
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
-enum class HealthGroup { BASIC, PREPARED, SPECIAL }
-
-private data class UiStudent(
-    val id: String,
-    val initials: String,
-    val name: String,
-    val gender: String,
-    val age: String,
-    val group: HealthGroup,
-    val score: String,
-    val hasAlert: Boolean,
-    val avatarGradient: Brush
-)
+// ── Data ─────────────────────────────────────────────────────────────────────
 
 private fun Student.toUiStudent(index: Int) = UiStudent(
-    id = id,
-    initials = initials.ifEmpty {
-        name.split(" ").take(2).mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }.joinToString("")
-    },
-    name = name,
-    gender = gender.ifEmpty { "--" },
-    age = age.ifEmpty { "--" },
-    group = when (groupName.lowercase()) {
-        "prepared" -> HealthGroup.PREPARED
-        "special"  -> HealthGroup.SPECIAL
-        else       -> HealthGroup.BASIC
-    },
-    score = score,
-    hasAlert = hasAlert,
-    avatarGradient = avatarGradients[index % avatarGradients.size]
-)
+     id = id,
+     initials = initials.ifEmpty {
+         name.split(" ").take(2).mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }.joinToString("")
+     },
+     name = name,
+     gender = gender.ifEmpty { "--" },
+     age = age.ifEmpty { "--" },
+     group = when (medicalGroup) {
+         MedicalGroup.BASIC -> HealthGroup.BASIC
+         MedicalGroup.PREPARATORY -> HealthGroup.PREPARED
+         MedicalGroup.SPECIAL -> HealthGroup.SPECIAL
+     },
+     score = score,
+     hasAlert = hasAlert,
+     avatarGradient = avatarGradients[index % avatarGradients.size]
+ )
 
 private val filterLabels = listOf("Все", "basic", "prepared", "special", "С травмами")
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 @Composable
-fun StudentsScreen(onBackClick: () -> Unit = {}) {
+fun StudentsScreen(onBackClick: () -> Unit = {}, onStudentClick: (String) -> Unit = {}) {
     val viewModel: StudentsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -205,6 +195,7 @@ fun StudentsScreen(onBackClick: () -> Unit = {}) {
                     items(visibleStudents, key = { it.id }) { student ->
                         StudentCard(
                             student  = student,
+                            onClick  = { onStudentClick(student.id) },
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp)
                         )
                     }
@@ -416,7 +407,7 @@ private fun FilterChip(label: String, isSelected: Boolean, onClick: () -> Unit) 
 // ── Student card ──────────────────────────────────────────────────────────────
 
 @Composable
-private fun StudentCard(student: UiStudent, modifier: Modifier = Modifier) {
+private fun StudentCard(student: UiStudent, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -424,6 +415,7 @@ private fun StudentCard(student: UiStudent, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)

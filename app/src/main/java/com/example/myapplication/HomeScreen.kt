@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +33,7 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.data.MockData
 import org.koin.androidx.compose.koinViewModel
 
 private val ColorPrimary = Color(0xFF6C63FF)
@@ -73,9 +75,13 @@ fun HomeScreen(
     onNavigateToLMSAttendance: () -> Unit = {},
     onNavigateToQRScanner: () -> Unit = {},
     onNavigateToAchievements: () -> Unit = {},
-    viewModel: UserProfileViewModel = koinViewModel()
+    onNavigateToModel: () -> Unit = {},
+    onNavigateToTeacherQRDisplay: () -> Unit = {},
+    viewModel: UserProfileViewModel = koinViewModel(),
+    studentsViewModel: StudentsViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val studentsState by studentsViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val healthViewModel: HealthViewModel = viewModel(factory = HealthViewModelFactory(context))
     
@@ -144,10 +150,8 @@ fun HomeScreen(
                         onNavigateToProfile = onNavigateToProfile
                     )
                     Spacer(modifier = Modifier.height(20.dp))
-                    if (userRole == UserRole.Teacher) {
-                        TeacherSummaryCard()
-                    } else {
-                        CreditStatusCard()
+                    CreditStatusCard()
+                    if (userRole == UserRole.Student) {
                         Spacer(modifier = Modifier.height(16.dp))
                         HeartRateCard(
                             state = heartRateState,
@@ -176,19 +180,25 @@ fun HomeScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
+                    SectionLabel("Активность дня")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    DailyActivityRow(
+                        steps = todaySteps,
+                        calories = todayCalories,
+                        activeMinutes = todayActiveMinutes,
+                        isLoading = isLoading
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    NextSessionCard()
                     if (userRole == UserRole.Student) {
-                        SectionLabel("Активность дня")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        DailyActivityRow(
-                            steps = todaySteps,
-                            calories = todayCalories,
-                            activeMinutes = todayActiveMinutes,
-                            isLoading = isLoading
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        NextSessionCard()
                         Spacer(modifier = Modifier.height(10.dp))
                         InjuryWarningCard()
+                    }
+                    if (userRole == UserRole.Teacher) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        SectionLabel("Статистика группы")
+                        Spacer(modifier = Modifier.height(12.dp))
+                        GroupStatsRow(studentsState = studentsState)
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     SectionLabel("Быстрые действия")
@@ -200,7 +210,9 @@ fun HomeScreen(
                         onNavigateToStudents = onNavigateToStudents,
                         onNavigateToLMSAttendance = onNavigateToLMSAttendance,
                         onNavigateToQRScanner = onNavigateToQRScanner,
-                        onNavigateToAchievements = onNavigateToAchievements
+                        onNavigateToAchievements = onNavigateToAchievements,
+                        onNavigateToModel = onNavigateToModel,
+                        onNavigateToTeacherQRDisplay = onNavigateToTeacherQRDisplay
                     )
                 }
             }
@@ -549,7 +561,9 @@ private fun QuickActionButtons(
     onNavigateToStudents: () -> Unit,
     onNavigateToLMSAttendance: () -> Unit,
     onNavigateToQRScanner: () -> Unit,
-    onNavigateToAchievements: () -> Unit
+    onNavigateToAchievements: () -> Unit,
+    onNavigateToModel: () -> Unit = {},
+    onNavigateToTeacherQRDisplay: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -557,8 +571,8 @@ private fun QuickActionButtons(
     ) {
         if (userRole == UserRole.Teacher) {
             TeacherQuickActions(
-                onNavigateToStudents = onNavigateToStudents,
-                onNavigateToLMSAttendance = onNavigateToLMSAttendance
+                onNavigateToTeacherQRDisplay = onNavigateToTeacherQRDisplay,
+                onNavigateToChatbot = onNavigateToChatbot
             )
         } else {
             StudentQuickActions(
@@ -578,173 +592,113 @@ private fun StudentQuickActions(
     onNavigateToQRScanner: () -> Unit,
     onNavigateToAchievements: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(GradientPrimary)
-            .clickable { onNavigateToPlans() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "🚀 Начать тренировку",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(ColorSurface)
-            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
-            .clickable { onNavigateToQRScanner() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "📷 QR-сканер",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ColorDark,
-            textAlign = TextAlign.Center
-        )
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(ColorSurface)
-            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
-            .clickable { onNavigateToAchievements() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "🏆 Достижения",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ColorDark,
-            textAlign = TextAlign.Center
-        )
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(ColorSurface)
-            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
-            .clickable { onNavigateToChatbot() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "🤖 ИИ-Ассистент",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ColorDark,
-            textAlign = TextAlign.Center
-        )
-    }
+    QuickActionCard(
+        emoji = "🚀",
+        title = "Начать тренировку",
+        subtitle = "Перейти к текущему плану",
+        onClick = onNavigateToPlans
+    )
+    QuickActionCard(
+        emoji = "📷",
+        title = "QR-сканер",
+        subtitle = "Отметиться на занятии",
+        onClick = onNavigateToQRScanner
+    )
+    QuickActionCard(
+        emoji = "🏆",
+        title = "Достижения",
+        subtitle = "Мои награды и прогресс",
+        onClick = onNavigateToAchievements
+    )
+    QuickActionCard(
+        emoji = "🤖",
+        title = "ИИ-Ассистент",
+        subtitle = "Задать вопрос рекомендациям",
+        onClick = onNavigateToChatbot
+    )
 }
 
 @Composable
-private fun TeacherQuickActions(
-    onNavigateToStudents: () -> Unit,
-    onNavigateToLMSAttendance: () -> Unit
+private fun QuickActionCard(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(GradientPrimary)
-            .clickable { onNavigateToStudents() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "👨‍🏫 Список студентов",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
             .background(ColorSurface)
-            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(14.dp))
-            .clickable { onNavigateToLMSAttendance() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
+            .border(1.dp, ColorCardBorder, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Text(
-            text = "📖 Журнал посещаемости",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ColorDark,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun TeacherSummaryCard() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF6C63FF).copy(alpha = 0.08f),
-                        Color.White
-                    )
-                )
-            )
-            .border(1.dp, ColorPrimaryBorder, RoundedCornerShape(16.dp))
-            .padding(16.dp)
-    ) {
-        Column {
-            Text(
-                text = "Статистика группы",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = ColorDark,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(ColorPrimary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
             ) {
-                TeacherStatItem(value = "24", label = "Студента")
-                TeacherStatItem(value = "18", label = "Присутствие")
-                TeacherStatItem(value = "3", label = "Травмы")
+                Text(text = emoji, fontSize = 18.sp)
             }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ColorDark
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ColorTextMuted
+                )
+            }
+            Text(text = "›", fontSize = 20.sp, color = ColorTextMuted)
         }
     }
 }
 
 @Composable
-private fun TeacherStatItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = ColorPrimary
-        )
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Normal,
-            color = ColorTextMuted
-        )
+private fun TeacherQuickActions(
+    onNavigateToTeacherQRDisplay: () -> Unit,
+    onNavigateToChatbot: () -> Unit
+) {
+    QuickActionCard(
+        emoji = "🚀",
+        title = "Начать занятие",
+        subtitle = "Показать QR для отметки посещаемости",
+        onClick = onNavigateToTeacherQRDisplay
+    )
+    QuickActionCard(
+        emoji = "🤖",
+        title = "ИИ-Ассистент",
+        subtitle = "Сгенерировать план тренировок",
+        onClick = onNavigateToChatbot
+    )
+}
+
+@Composable
+private fun GroupStatsRow(studentsState: StudentsUiState) {
+    val students = (studentsState as? StudentsUiState.Loaded)?.students ?: emptyList()
+    val sessionsToday = MockData.attendanceSessions.count { DateUtils.isToday(it.startTime) }
+    val alertCount = students.count { it.hasAlert }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        MetricCard(emoji = "👥", value = students.size.toString(), label = "Студентов", modifier = Modifier.weight(1f))
+        MetricCard(emoji = "📅", value = sessionsToday.toString(), label = "Занятий сегодня", modifier = Modifier.weight(1f))
+        MetricCard(emoji = "⚠️", value = alertCount.toString(), label = "Требуют внимания", modifier = Modifier.weight(1f))
     }
 }
 

@@ -15,7 +15,10 @@ data class Student(
     val age: String = "",
     val groupName: String = "",
     val score: String = "",
-    val hasAlert: Boolean = false
+    val hasAlert: Boolean = false,
+    val heightCm: Float = 170f,
+    val weightKg: Float = 65f,
+    val medicalGroup: MedicalGroup = MedicalGroup.BASIC
 ) {
     companion object {
         fun fromMap(id: String, map: Map<String, Any?>): Student {
@@ -64,27 +67,17 @@ class StudentsViewModel(
     val uiState: StateFlow<StudentsUiState> = _uiState.asStateFlow()
 
     init {
-        loadStudents()
-    }
-
-    fun loadStudents() {
         viewModelScope.launch {
-            _uiState.value = StudentsUiState.Loading
-            repository.getStudents().fold(
-                onSuccess = { students ->
-                    val attended = students.count { !it.hasAlert }
-                    val pct = if (students.isNotEmpty()) (attended * 100 / students.size) else 0
-                    _uiState.value = StudentsUiState.Loaded(
-                        students = students,
-                        total = students.size,
-                        attendancePercent = pct,
-                        groupLabel = "Подгруппа физ. образования"
-                    )
-                },
-                onFailure = { e ->
-                    _uiState.value = StudentsUiState.Error(e.message ?: "Ошибка загрузки студентов")
-                }
-            )
+            repository.getStudentsStream().collect { students ->
+                val attended = students.count { !it.hasAlert }
+                val pct = if (students.isNotEmpty()) (attended * 100 / students.size) else 0
+                _uiState.value = StudentsUiState.Loaded(
+                    students = students,
+                    total = students.size,
+                    attendancePercent = pct,
+                    groupLabel = "Подгруппа физ. образования"
+                )
+            }
         }
     }
 }

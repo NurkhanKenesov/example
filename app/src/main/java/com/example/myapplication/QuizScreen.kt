@@ -23,20 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.androidx.compose.koinViewModel
-
-// ── Data classes ──────────────────────────────────────────────────────────────
-
-data class QuizQuestion(
-    val text: String,
-    val options: List<String>,
-    val correctIndex: Int
-)
-
-data class QuizState(
-    val currentIndex: Int = 0,
-    val selectedAnswers: Map<Int, Int> = emptyMap(),
-    val isCompleted: Boolean = false
-)
+import com.example.myapplication.data.models.QuizQuestion
+import com.example.myapplication.data.models.QuizState
 
 // ── Quiz questions ────────────────────────────────────────────────────────────
 

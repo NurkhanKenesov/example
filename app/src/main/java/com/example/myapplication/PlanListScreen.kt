@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.androidx.compose.koinViewModel
+import com.example.myapplication.data.models.PlanStatus
+import com.example.myapplication.data.models.TrainingPlan
 
 private val Ebony = Color(0xFF0F0F23)
 private val EbonyAlpha40 = Color(0x660F0F23)
@@ -41,30 +43,6 @@ private val Amber = Color(0xFFFB923C)
 private val AmberBg = Color(0x26FB923C)
 private val Red = Color(0xFFF87171)
 private val RedBg = Color(0x26F87171)
-
-enum class PlanStatus(
-    val emoji: String,
-    val label: String,
-    val badgeColor: Color,
-    val badgeBg: Color,
-) {
-    COMPLETED("✅", "COMPLETED", Green, GreenBg),
-    SCHEDULED("🕐", "SCHEDULED", Amber, AmberBg),
-    DISCARDED("❌", "DISCARDED", Red, RedBg),
-}
-
-data class TrainingPlan(
-    val id: Int,
-    val name: String,
-    val exerciseCount: Int,
-    val date: String,
-    val status: PlanStatus,
-    val statusNote: String,
-    val progressFraction: Float,
-    val currentDayIndex: Int,
-)
-
-private val emptyPlans = emptyList<TrainingPlan>()
 
 @Composable
 fun PlanListScreen(

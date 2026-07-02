@@ -2,6 +2,7 @@ package com.example.myapplication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,8 @@ sealed interface PlansUiState {
 }
 
 class PlansViewModel(
-    private val repository: PlanRepository
+    private val repository: PlanRepository,
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlansUiState>(PlansUiState.Loading)
@@ -33,9 +35,9 @@ class PlansViewModel(
 
     private fun loadProfile() {
         viewModelScope.launch {
-            repository.getUserMedicalGroup().fold(
-                onSuccess = { group ->
-                    _profileMedicalGroup.value = group
+            userProfileRepository.getProfile().fold(
+                onSuccess = { profile ->
+                    _profileMedicalGroup.value = profile?.medicalGroup ?: MedicalGroup.BASIC
                 },
                 onFailure = { /* silently ignore */ }
             )

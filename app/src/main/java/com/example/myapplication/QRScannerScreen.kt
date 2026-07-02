@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,8 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -34,19 +39,24 @@ import androidx.navigation.NavHostController
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.Executors
 
 @Composable
 fun QRScannerScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    onCheckInSuccess: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val attendanceViewModel: AttendanceViewModel = koinViewModel()
 
     var hasCameraPermission by remember { mutableStateOf(false) }
     var scannedResult by remember { mutableStateOf<String?>(null) }
     var isScanning by remember { mutableStateOf(true) }
+    var checkInMessage by remember { mutableStateOf<String?>(null) }
+    var isCheckInSuccess by remember { mutableStateOf<Boolean?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -54,7 +64,6 @@ fun QRScannerScreen(
         hasCameraPermission = isGranted
     }
 
-    // Проверка и запрос разрешения
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) 
             == PackageManager.PERMISSION_GRANTED) {
@@ -126,7 +135,24 @@ fun QRScannerScreen(
                                         if (rawValue != null && isScanning) {
                                             isScanning = false
                                             scannedResult = rawValue
-                                            // Здесь можно обработать результат (навигация, API и т.д.)
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                attendanceViewModel.checkIn(rawValue).fold(
+                                                    onSuccess = { record ->
+                                                        checkInMessage = "✅ Вы отмечены как присутствующий"
+                                                        isCheckInSuccess = true
+                                                        onCheckInSuccess()
+                                                    },
+                                                    onFailure = { error ->
+                                                        val errorMsg = when (error.message) {
+                                                            "Not logged in" -> "Ошибка: пользователь не авторизован"
+                                                            "Session not found" -> "Сессия не найдена"
+                                                            else -> "Ошибка отметки: ${error.message}"
+                                                        }
+                                                        checkInMessage = errorMsg
+                                                        isCheckInSuccess = false
+                                                    }
+                                                )
+                                            }
                                             break
                                         }
                                     }
@@ -182,8 +208,8 @@ fun QRScannerScreen(
             }
         }
 
-        // Показ результата сканирования
-        scannedResult?.let { result ->
+        // Показ результата отметки
+        checkInMessage?.let { message ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -191,12 +217,16 @@ fun QRScannerScreen(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 androidx.compose.material3.Card(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = if (isCheckInSuccess == true) Color(0xFFDCFCE7) else Color(0xFFFEF2F2)
+                    )
                 ) {
                     Text(
-                        text = "Отсканировано:\n$result",
+                        text = message,
                         modifier = Modifier.padding(24.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isCheckInSuccess == true) Color(0xFF166534) else Color(0xFF991B1B)
                     )
                 }
             }

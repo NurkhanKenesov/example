@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.MuscleFatigueUiState
+import com.example.myapplication.data.models.MuscleGroup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.androidx.compose.koinViewModel
@@ -40,21 +42,6 @@ private val ColorShadow = Color(0x0F000000)
 private val ColorYellowIconBg = Color(0x26FBBF24)
 private val ColorGreenChipBorder = Color(0x404ADE80)
 private val ColorGreenChipBg = Color(0x1A4ADE80)
-
-data class MuscleGroup(
-    val name: String,
-    val hoursRemaining: String,
-    val recoveryPercent: Int,
-    val totalHours: Int,
-    val dotColor: Color,
-    val barColor: Color,
-)
-
-sealed interface MuscleFatigueUiState {
-    object Loading : MuscleFatigueUiState
-    data class Loaded(val recovering: List<MuscleGroup>, val recovered: List<String>) : MuscleFatigueUiState
-    data class Error(val message: String) : MuscleFatigueUiState
-}
 
 class MuscleFatigueViewModel(
     private val repository: InjuryRepository

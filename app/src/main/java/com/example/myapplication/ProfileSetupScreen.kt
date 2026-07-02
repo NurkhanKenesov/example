@@ -209,6 +209,7 @@ fun ProfileSetupScreen(
                                 .clickable(enabled = isFormValid && !isSaving) {
                                     val userProfile = UserProfile(
                                         name = name.trim(),
+                                        role = profile.role,
                                         gender = gender,
                                         age = age.toIntOrNull() ?: 18,
                                         heightCm = heightCm.toIntOrNull() ?: 170,

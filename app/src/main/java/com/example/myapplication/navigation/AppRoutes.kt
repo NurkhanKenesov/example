@@ -16,9 +16,12 @@ import kotlinx.serialization.Serializable
 @Serializable data object AIExplanationRoute
 @Serializable data object ChatbotRoute
 @Serializable data object StudentsRoute
+@Serializable data class EditProfileRoute(val studentId: String = "")
+@Serializable data object ModelRoute
 @Serializable data object LMSAttendanceRoute
 @Serializable data object AchievementsRoute
 @Serializable data object QRScannerRoute
+@Serializable data object TeacherQRDisplayRoute
 @Serializable data object SettingsRoute
 @Serializable data object TheoryRoute
 @Serializable data object QuizRoute

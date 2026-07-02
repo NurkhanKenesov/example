@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.models.Achievement
 
 private val AchievPrimary = Color(0xFF6C63FF)
 private val AchievDark = Color(0xFF0F0F23)
@@ -33,13 +34,6 @@ private val AchievNavBorder = Color(0xFF000000).copy(alpha = 0.08f)
 
 private val AchievGradientBackground = Brush.verticalGradient(
     colors = listOf(Color(0xFFF0F2FF), Color(0xFFF5F7FF))
-)
-
-private data class Achievement(
-    val emoji: String,
-    val name: String,
-    val description: String,
-    val unlocked: Boolean = true
 )
 
 private val achievements = listOf(

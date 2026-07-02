@@ -1,0 +1,27 @@
+{
+  "files": [
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/flutter_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/indexes.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/ios_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/provisioning.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/security_rules.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-firestore/references/standard/web_sdk_usage.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-hosting-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-hosting-basics/references/configuration.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-hosting-basics/references/deploying.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-remote-config-basics/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-remote-config-basics/references/android_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-remote-config-basics/references/ios_setup.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/firebase-security-rules-auditor/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.agents/skills/xcode-project-setup/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/SKILL.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/add-watch.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/exports.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/extraction-spec.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/github-and-merge.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/hooks.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/query.md",
+    "/Users/nurkhan/AndroidStudioProjects/MyApplication2/.config/kilo/skills/graphify/references/transcribe.md"
+  ],
+  "type": "docs"
+}

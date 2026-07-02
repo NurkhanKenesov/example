@@ -2,7 +2,6 @@ package com.example.myapplication
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.data.LocalAuthManager
 import com.example.myapplication.data.LocalUser
 import com.example.myapplication.data.PreferencesManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val localAuthManager: LocalAuthManager,
+    private val userProfileRepository: UserProfileRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -35,14 +34,14 @@ class AuthViewModel(
 
     init {
         viewModelScope.launch {
-            _currentUser.value = localAuthManager.getCurrentUser()
+            _currentUser.value = userProfileRepository.getCurrentUser()
         }
     }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _loginState.value = AuthUiState.Loading
-            localAuthManager.login(email, password).fold(
+            userProfileRepository.login(email, password).fold(
                 onSuccess = { user ->
                     _currentUser.value = user
                     _loginState.value = AuthUiState.Success("Вход выполнен")
@@ -54,16 +53,18 @@ class AuthViewModel(
         }
     }
 
-    fun register(email: String, password: String, role: String = "Student") {
+    fun register(email: String, password: String, role: String = "Student", name: String = "") {
         viewModelScope.launch {
             _registerState.value = AuthUiState.Loading
-            localAuthManager.register(email, password, role).fold(
+            userProfileRepository.register(email, password, name, role).fold(
                 onSuccess = { user ->
                     _currentUser.value = user
                     _registerState.value = AuthUiState.Success("Аккаунт создан")
+                    android.util.Log.d("AuthViewModel", "Registration success: uid=${user.uid}, email=${user.email}, role=${user.role}")
                 },
                 onFailure = { e ->
                     _registerState.value = AuthUiState.Error(e.message ?: "Ошибка регистрации")
+                    android.util.Log.e("AuthViewModel", "Registration failed: ${e.message}")
                 }
             )
         }
@@ -71,13 +72,19 @@ class AuthViewModel(
 
     fun logout() {
         viewModelScope.launch {
-            localAuthManager.logout()
-            _currentUser.value = null
-            _loginState.value = AuthUiState.Idle
-            _registerState.value = AuthUiState.Idle
-            preferencesManager.setUserName("")
-            preferencesManager.setUserEmail("")
-            _logoutComplete.value = true
+            userProfileRepository.logout().fold(
+                onSuccess = {
+                    _currentUser.value = null
+                    _loginState.value = AuthUiState.Idle
+                    _registerState.value = AuthUiState.Idle
+                    preferencesManager.setUserName("")
+                    preferencesManager.setUserEmail("")
+                    _logoutComplete.value = true
+                },
+                onFailure = { e ->
+                    _loginState.value = AuthUiState.Error(e.message ?: "Ошибка выхода")
+                }
+            )
         }
     }
 
@@ -85,4 +92,10 @@ class AuthViewModel(
     fun clearLoginError() { _loginState.value = AuthUiState.Idle }
     fun clearRegisterError() { _registerState.value = AuthUiState.Idle }
     fun isLoggedIn(): Boolean = _currentUser.value != null
+
+    fun refreshCurrentUser() {
+        viewModelScope.launch {
+            _currentUser.value = userProfileRepository.getCurrentUser()
+        }
+    }
 }
